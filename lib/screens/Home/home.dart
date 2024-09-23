@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_adaptive_navigation/flutter_adaptive_navigation.dart';
 import 'package:grocery_vegitable_market/banner/banner.dart';
+import 'product_details.dart'; // Import the product details page
 
 class Home extends StatefulWidget {
   @override
@@ -24,12 +25,18 @@ class _HomeState extends State<Home> {
       'name': 'Organic Bananas',
       'price': '\$4.99',
       'image': 'assets/Fruit/organic_bananas.jpeg',
+      'rating': 4.5,
+      'quantity': '1kg',
+      'description': 'Fresh organic bananas from local farms.',
       'color': Colors.lightGreen[50],
     },
     {
       'name': 'Red Apple',
-      'price': '\$4.99',
+      'price': '\$3.99',
       'image': 'assets/Fruit/red_apple.jpeg',
+      'rating': 4.8,
+      'quantity': '500g',
+      'description': 'Crispy and sweet red apples, great for snacks.',
       'color': Colors.red[50],
     },
   ];
@@ -224,9 +231,10 @@ class _HomeState extends State<Home> {
         itemBuilder: (context, index) {
           final product = searchResults[index];
           return SizedBox(
-            width: 180, // Adjust width for responsive design
+            width: 180,
             child: GestureDetector(
               onTap: () {
+                // Navigate to ProductDetailPage with the selected product
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -304,36 +312,26 @@ class ProductCard extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Image.asset(image,
-                height: 120, width: 120), // Increased image size
+            child: Image.asset(image, height: 120, width: 120),
           ),
           Text(
             productName,
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18), // Increased font size
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             textAlign: TextAlign.center,
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment
-                .spaceBetween, // Adjusts spacing between elements
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(price,
-                  style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 18)), // Increased font size
+              Text(price, style: TextStyle(color: Colors.green, fontSize: 18)),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ElevatedButton(
                   onPressed: () {
                     // Add to cart logic here
                   },
-                  child: Icon(Icons.add_shopping_cart,
-                      size: 20), // Icon size can be adjusted
+                  child: Icon(Icons.add_shopping_cart),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
-                    shape: CircleBorder(), // Makes button circular
-                    padding: EdgeInsets.all(12), // Increases button size
                   ),
                 ),
               ),
@@ -343,46 +341,4 @@ class ProductCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class ProductDetailPage extends StatelessWidget {
-  final Map<String, dynamic> product;
-
-  ProductDetailPage({required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(product['name']),
-        backgroundColor: Colors.green,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(product['image'], height: 200, width: 200),
-            Text(product['name'],
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            Text(product['price'],
-                style: TextStyle(fontSize: 20, color: Colors.green)),
-            ElevatedButton(
-              onPressed: () {
-                // Add to cart logic here
-              },
-              child: Text("Add to Cart"),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: Home(),
-  ));
 }
