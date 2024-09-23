@@ -1,0 +1,109 @@
+// import 'package:flutter/material.dart';
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+// class SelectLocationPage extends StatefulWidget {
+//   @override
+//   _SelectLocationPageState createState() => _SelectLocationPageState();
+// }
+
+// class _SelectLocationPageState extends State<SelectLocationPage> {
+//   final TextEditingController _areaController = TextEditingController();
+//   LatLng _selectedLocation = LatLng(37.7749, -122.4194); // Default location (San Francisco)
+//   late GoogleMapController _mapController;
+
+//   void _onMapCreated(GoogleMapController controller) {
+//     _mapController = controller;
+//   }
+
+//   void _onLocationSelected(LatLng location) {
+//     setState(() {
+//       _selectedLocation = location;
+//     });
+//     // Optionally, update the map view or perform any actions with the selected location
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         leading: IconButton(
+//           icon: Icon(Icons.arrow_back),
+//           onPressed: () {
+//             Navigator.pop(context);
+//           },
+//         ),
+//         title: Text('Select Location'),
+//       ),
+//       body: Padding(
+//         padding: const EdgeInsets.all(16.0),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Center(
+//               child: Icon(
+//                 Icons.location_on,
+//                 size: 100, // Large icon size
+//                 color: Colors.blue,
+//               ),
+//             ),
+//             SizedBox(height: 16),
+//             Center(
+//               child: Text(
+//                 'Select your zone on the map',
+//                 textAlign: TextAlign.center,
+//                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//               ),
+//             ),
+//             SizedBox(height: 16),
+//             Container(
+//               height: 300, // Adjust height as needed
+//               child: GoogleMap(
+//                 onMapCreated: _onMapCreated,
+//                 initialCameraPosition: CameraPosition(
+//                   target: LatLng(37.7749, -122.4194), // Default position (San Francisco)
+//                   zoom: 10,
+//                 ),
+//                 onTap: _onLocationSelected,
+//                 markers: Set<Marker>.of([
+//                   Marker(
+//                     markerId: MarkerId('selected-location'),
+//                     position: _selectedLocation,
+//                   ),
+//                 ]),
+//               ),
+//             ),
+//             SizedBox(height: 16),
+//             TextField(
+//               controller: _areaController,
+//               decoration: InputDecoration(
+//                 labelText: 'Enter your area',
+//                 border: OutlineInputBorder(),
+//               ),
+//             ),
+//             SizedBox(height: 16),
+//             SizedBox(
+//               width: double.infinity,
+//               child: ElevatedButton(
+//                 onPressed: () {
+//                   // Handle submission logic
+//                   String selectedArea = _areaController.text;
+//                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+//                     content: Text('Selected Location: $_selectedLocation, Area: $selectedArea'),
+//                   ));
+//                 },
+//                 style: ElevatedButton.styleFrom(
+//                   padding: EdgeInsets.all(16),
+//                   shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(8),
+//                   ),
+//                   backgroundColor: Colors.green,
+//                 ),
+//                 child: Text('Submit', style: TextStyle(fontSize: 18)),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
