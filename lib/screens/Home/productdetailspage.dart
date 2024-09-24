@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Map<String, dynamic> product;
+  final void Function(Map<String, dynamic> product) onAddToCart;
 
-  ProductDetailPage({required this.product});
+  ProductDetailPage({
+    required this.product,
+    required this.onAddToCart,
+  });
 
   @override
   _ProductDetailPageState createState() => _ProductDetailPageState();
@@ -12,12 +16,33 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   int quantity = 1;
   double userRating = 3.0; // Default user rating
+  bool isFavorite = false; // Track favorite state
 
   // Method to update user rating
   void updateRating(double rating) {
     setState(() {
       userRating = rating;
     });
+  }
+
+  // Method to toggle favorite state
+  void toggleFavorite() {
+    setState(() {
+      isFavorite = !isFavorite;
+    });
+  }
+
+  // Method to navigate to the favorites page
+  void navigateToFavorites() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => FavoritesPage()),
+    );
+  }
+
+  // Method to open the drawer
+  void openDrawer() {
+    Scaffold.of(context).openDrawer();
   }
 
   @override
@@ -28,6 +53,42 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       appBar: AppBar(
         title: Text(widget.product['name']),
         backgroundColor: Colors.green,
+        actions: [
+          IconButton(
+            icon: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: isFavorite ? Colors.red : Colors.white,
+            ),
+            onPressed: toggleFavorite, // Toggle favorite state
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.green,
+              ),
+              child: Text(
+                'Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              title: Text('Favorites'),
+              onTap: () {
+                Navigator.pop(context); // Close the drawer
+                navigateToFavorites(); // Navigate to favorites page
+              },
+            ),
+            // Add more menu items here if needed
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -166,7 +227,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton(
           onPressed: () {
-            // Add to Cart action
+            widget.onAddToCart(widget.product); // Call the add to cart function
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
@@ -180,6 +241,22 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             style: TextStyle(fontSize: 18),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Define a stub for the FavoritesPage for navigation
+class FavoritesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Favorites'),
+        backgroundColor: Colors.green,
+      ),
+      body: Center(
+        child: Text('Your favorite products will be listed here.'),
       ),
     );
   }

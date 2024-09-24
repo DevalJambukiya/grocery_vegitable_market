@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_adaptive_navigation/flutter_adaptive_navigation.dart';
 import 'package:grocery_vegitable_market/banner/banner.dart';
-import 'product_details.dart'; // Import the product details page
+import 'package:grocery_vegitable_market/screens/Cart/cart.dart';
+import 'package:grocery_vegitable_market/screens/Explore/explore.dart';
+import 'package:grocery_vegitable_market/screens/Favorites/favoritepage.dart';
+import 'package:grocery_vegitable_market/screens/Home/productdetailspage.dart'
+    as home;
 
 class Home extends StatefulWidget {
   @override
@@ -39,9 +43,12 @@ class _HomeState extends State<Home> {
       'description': 'Crispy and sweet red apples, great for snacks.',
       'color': Colors.red[50],
     },
+    // Add more products as needed
   ];
 
   List<Map<String, dynamic>> searchResults = [];
+  List<Map<String, dynamic>> cartItems = []; // List to hold cart items
+  List<Map<String, dynamic>> favoriteItems = []; // List to hold favorite items
 
   @override
   void initState() {
@@ -52,11 +59,6 @@ class _HomeState extends State<Home> {
       setState(() {
         _currentPage = (_currentPage + 1) % bannerImages.length;
       });
-      _pageController.animateToPage(
-        _currentPage,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeIn,
-      );
     });
   }
 
@@ -79,6 +81,20 @@ class _HomeState extends State<Home> {
     });
   }
 
+  void addToCart(Map<String, dynamic> product) {
+    setState(() {
+      cartItems.add(product); // Add product to cart
+    });
+  }
+
+  void addToFavorites(Map<String, dynamic> product) {
+    setState(() {
+      if (!favoriteItems.contains(product)) {
+        favoriteItems.add(product); // Add product to favorites
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
@@ -86,9 +102,9 @@ class _HomeState extends State<Home> {
     return FlutterAdaptiveNavigationScaffold(
       labelDisplayType: LabelDisplayType.all,
       appBar: AppBar(
-        title: const Text('Fresh Vegetables'),
+        title: const Text('Fresh Vegetables And Grocery'),
         backgroundColor: Colors.green,
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: false, // No back button on HomePage
       ),
       drawerWidthFraction: 0.2,
       destinations: [
@@ -101,17 +117,17 @@ class _HomeState extends State<Home> {
         NavigationElement(
           icon: const Icon(Icons.explore),
           label: 'Explore',
-          builder: () => buildExploreContent(),
+          builder: () => ExplorePage(),
         ),
         NavigationElement(
           icon: const Icon(Icons.shopping_cart),
           label: 'Cart',
-          builder: () => buildCartContent(),
+          builder: () => CartPage(), // Pass cart items to CartPage
         ),
         NavigationElement(
           icon: const Icon(Icons.favorite),
           label: 'Favorites',
-          builder: () => buildFavoritesContent(),
+          builder: () => FavoritePage(), // Navigate to the FavoritePage
         ),
         NavigationElement(
           icon: const Icon(Icons.person),
@@ -238,7 +254,10 @@ class _HomeState extends State<Home> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProductDetailPage(product: product),
+                    builder: (context) => home.ProductDetailPage(
+                      product: product,
+                      onAddToCart: addToCart, // Pass add to cart function
+                    ),
                   ),
                 );
               },
@@ -247,6 +266,8 @@ class _HomeState extends State<Home> {
                 price: product['price'],
                 image: product['image'],
                 cardColor: product['color'],
+                onAddToCart: () => addToCart(product), // Add to cart
+                onFavorite: () => addToFavorites(product), // Add to favorites
               ),
             ),
           );
@@ -264,7 +285,9 @@ class _HomeState extends State<Home> {
           Text(title,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              // Implement 'See all' functionality if needed
+            },
             child: Text('See all', style: TextStyle(color: Colors.green)),
           ),
         ],
@@ -272,9 +295,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget buildExploreContent() => Center(child: Text('Explore Page'));
-  Widget buildCartContent() => Center(child: Text('Cart Page'));
-  Widget buildFavoritesContent() => Center(child: Text('Favorites Page'));
   Widget buildAccountContent() => Center(child: Text('Account Page'));
 }
 
@@ -283,12 +303,16 @@ class ProductCard extends StatelessWidget {
   final String price;
   final String image;
   final Color cardColor;
+  final VoidCallback onAddToCart;
+  final VoidCallback onFavorite; // New callback for favorite button
 
   ProductCard({
     required this.productName,
     required this.price,
     required this.image,
     required this.cardColor,
+    required this.onAddToCart,
+    required this.onFavorite, // New parameter for favorite button
   });
 
   @override
@@ -308,34 +332,61 @@ class ProductCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Image.asset(image, height: 120, width: 120),
-          ),
-          Text(
-            productName,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            textAlign: TextAlign.center,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(price, style: TextStyle(color: Colors.green, fontSize: 18)),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Add to cart logic here
-                  },
-                  child: Icon(Icons.add_shopping_cart),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                image: DecorationImage(
+                  image: AssetImage(image),
+                  fit: BoxFit.cover,
                 ),
               ),
-            ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              productName,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  price,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.green,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.favorite_border, color: Colors.red),
+                  onPressed: onFavorite, // Trigger favorite action
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: onAddToCart,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add, size: 16), // Add "+" icon here
+                  SizedBox(width: 4), // Add some spacing
+                  Text('Add to Cart'),
+                ],
+              ),
+            ),
           ),
         ],
       ),
