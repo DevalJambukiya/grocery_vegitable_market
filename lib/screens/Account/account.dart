@@ -9,52 +9,12 @@ class Account extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MainPage(), // Main Page with navigation
+      home: AccountPage(), // Directly navigate to the Account Page
       theme: ThemeData(
         primarySwatch: Colors.green,
         fontFamily: 'Roboto', // You can include a custom font if you want
       ),
-    );
-  }
-}
-
-// Main Page with Bottom Navigation Bar
-class MainPage extends StatefulWidget {
-  @override
-  _MainPageState createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
-  int _currentIndex = 0;
-
-  // List of Pages
-  final List<Widget> _pages = [
-    AccountPage(), // Account Page
-    CartPage(), // Cart Page
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_currentIndex], // Display the selected page
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index; // Update the current index
-          });
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: "Account",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: "Cart",
-          ),
-        ],
-      ),
+      debugShowCheckedModeBanner: false, // Remove the debug banner
     );
   }
 }
@@ -69,9 +29,11 @@ class AccountPage extends StatelessWidget {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.green, Colors.teal], // Green gradient background
+              colors: [
+                Color.fromARGB(255, 243, 248, 244),
+              ], // Define the gradient colors
               begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              end: Alignment.bottomCenter,
             ),
           ),
         ),
@@ -176,13 +138,5 @@ class AccountPage extends StatelessWidget {
         // Handle tap
       },
     );
-  }
-}
-
-// Cart Page Placeholder (Add your existing CartPage code here)
-class CartPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text("Cart Page")); // Placeholder for CartPage
   }
 }

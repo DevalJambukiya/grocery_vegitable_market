@@ -1,38 +1,65 @@
 import 'package:flutter/material.dart';
 
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Favorites Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+      ),
+      home: FavoritePage(),
+    );
+  }
+}
+
 class FavoritePage extends StatelessWidget {
-  // Sample data for the list of favorite products
   final List<Map<String, dynamic>> favoriteItems = [
     {
       'name': 'Sprite Can',
       'size': '325ml',
       'price': 1.50,
-      'image':
-          'assets/sprite_can.png', // Ensure this path matches your project structure
+      'image': 'assets/Beverages/sprite can.jpeg',
     },
     {
       'name': 'Diet Coke',
       'size': '335ml',
       'price': 1.99,
-      'image': 'assets/diet_coke.png',
+      'image': 'assets/Beverages/Diet Coke.jpeg',
     },
     {
       'name': 'Apple & Grape Juice',
-      'size': '2L',
+      'size': '3 kg',
       'price': 15.50,
-      'image': 'assets/apple_grape_juice.png',
+      'image': 'assets/fruit/red_apple.jpeg',
     },
     {
       'name': 'Coca Cola Can',
       'size': '325ml',
       'price': 4.99,
-      'image': 'assets/coca_cola_can.png',
+      'image': 'assets/Beverages/Coca Cola Can.jpeg',
     },
     {
-      'name': 'Pepsi Can',
-      'size': '330ml',
+      'name': 'Ladie Finger',
+      'size': '2 kg',
       'price': 4.99,
-      'image': 'assets/pepsi_can.png',
+      'image': 'assets/Vegitable/ladies finger.jpeg',
+    },
+    {
+      'name': 'Ginger',
+      'size': '2 kg',
+      'price': 4.99,
+      'image': 'assets/Vegitable/ginger.jpeg',
+    },
+    {
+      'name': 'Cucumber',
+      'size': '2 kg',
+      'price': 4.99,
+      'image': 'assets/Vegitable/consumer.jpeg',
     },
   ];
 
@@ -40,104 +67,131 @@ class FavoritePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Text(
-              'Favorites',
-              style: TextStyle(color: Colors.black), // Set text color to black
-            ),
-          ],
+        title: const Text(
+          'Favorites',
+          style: TextStyle(color: Colors.black),
         ),
-        backgroundColor: Color.fromARGB(255, 243, 248, 244),
+        backgroundColor: const Color.fromARGB(255, 243, 248, 244),
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: favoriteItems.length,
-              itemBuilder: (context, index) {
-                final item = favoriteItems[index];
-                return Card(
-                  elevation: 4,
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8.0),
-                          child: Image.asset(
-                            item['image'],
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item['name'],
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                item['size'],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Text(
-                          '\$${item['price'].toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.green.shade50],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          // Full-width Add All to Cart Button
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                onPressed: () {
-                  // Handle Add All to Cart functionality
-                },
-                child: const Text(
-                  'Add All To Cart',
-                  style: TextStyle(fontSize: 16),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Scrollbar(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    int columnCount = (constraints.maxWidth / 180).floor();
+                    return GridView.builder(
+                      padding: const EdgeInsets.all(8.0),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columnCount,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: 8.0,
+                        mainAxisSpacing: 8.0,
+                      ),
+                      itemCount: favoriteItems.length,
+                      itemBuilder: (context, index) {
+                        return _buildFavoriteItem(
+                            context, favoriteItems[index]);
+                      },
+                    );
+                  },
                 ),
               ),
             ),
+            _buildAddAllToCartButton(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFavoriteItem(BuildContext context, Map<String, dynamic> item) {
+    return Card(
+      elevation: 6,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.asset(
+                item['image'],
+                width: double.infinity,
+                height: 100,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              item['name'],
+              style: TextStyle(
+                fontSize: MediaQuery.of(context).size.width < 400 ? 12 : 14,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              item['size'],
+              style: TextStyle(
+                fontSize: MediaQuery.of(context).size.width < 400 ? 10 : 12,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '\$${item['price'].toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: MediaQuery.of(context).size.width < 400 ? 12 : 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddAllToCartButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          icon: const Icon(Icons.shopping_cart, size: 18),
+          label: const Text(
+            'Add All To Cart',
+            style: TextStyle(fontSize: 16),
           ),
-        ],
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            backgroundColor: Colors.green,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+          ),
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('All items added to cart!'),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

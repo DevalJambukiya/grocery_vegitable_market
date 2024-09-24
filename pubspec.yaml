@@ -66,7 +66,13 @@ flutter:
     - assets/Logo/
     - assets/Fruit/
     - assets/Vegitable/
+    - assets/Atta/
+    - assets/Bakery/
+    - assets/Beverages/
+    - assets/Chocolate/
+    - assets/explore/
     - assets/banner/
+    - assets/Oil/
     - assets/explore/
     
   #   - images/a_dot_ham.jpeg

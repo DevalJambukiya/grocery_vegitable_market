@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_adaptive_navigation/flutter_adaptive_navigation.dart';
 import 'package:grocery_vegitable_market/banner/banner.dart';
+import 'package:grocery_vegitable_market/screens/Account/account.dart';
 import 'package:grocery_vegitable_market/screens/Cart/cart.dart';
 import 'package:grocery_vegitable_market/screens/Explore/explore.dart';
 import 'package:grocery_vegitable_market/screens/Favorites/favoritepage.dart';
 import 'package:grocery_vegitable_market/screens/Home/productdetailspage.dart'
     as home;
+import 'package:grocery_vegitable_market/screens/Cart/cart.dart'
+    as cart; // Alias for CartPage
+import 'package:grocery_vegitable_market/screens/Account/account.dart'
+    as account; // Alias for Account
 
 class Home extends StatefulWidget {
   @override
@@ -47,14 +52,15 @@ class _HomeState extends State<Home> {
   ];
 
   List<Map<String, dynamic>> searchResults = [];
-  List<Map<String, dynamic>> cartItems = []; // List to hold cart items
-  List<Map<String, dynamic>> favoriteItems = []; // List to hold favorite items
+  List<Map<String, dynamic>> cartItems = [];
+  List<Map<String, dynamic>> favoriteItems = [];
 
   @override
   void initState() {
     super.initState();
     searchResults = allProducts;
 
+    // Start the banner auto-scroll timer
     _bannerTimer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
       setState(() {
         _currentPage = (_currentPage + 1) % bannerImages.length;
@@ -83,14 +89,14 @@ class _HomeState extends State<Home> {
 
   void addToCart(Map<String, dynamic> product) {
     setState(() {
-      cartItems.add(product); // Add product to cart
+      cartItems.add(product);
     });
   }
 
   void addToFavorites(Map<String, dynamic> product) {
     setState(() {
       if (!favoriteItems.contains(product)) {
-        favoriteItems.add(product); // Add product to favorites
+        favoriteItems.add(product);
       }
     });
   }
@@ -104,7 +110,7 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: const Text('Fresh Vegetables And Grocery'),
         backgroundColor: Colors.green,
-        automaticallyImplyLeading: false, // No back button on HomePage
+        automaticallyImplyLeading: false,
       ),
       drawerWidthFraction: 0.2,
       destinations: [
@@ -122,17 +128,17 @@ class _HomeState extends State<Home> {
         NavigationElement(
           icon: const Icon(Icons.shopping_cart),
           label: 'Cart',
-          builder: () => CartPage(), // Pass cart items to CartPage
+          builder: () => CartPage(), // Updated with alias
         ),
         NavigationElement(
           icon: const Icon(Icons.favorite),
           label: 'Favorites',
-          builder: () => FavoritePage(), // Navigate to the FavoritePage
+          builder: () => FavoritePage(),
         ),
         NavigationElement(
           icon: const Icon(Icons.person),
           label: 'Account',
-          builder: () => buildAccountContent(),
+          builder: () => Account(), // Updated with alias
         ),
       ],
       backgroundColor: Colors.white,
@@ -256,7 +262,7 @@ class _HomeState extends State<Home> {
                   MaterialPageRoute(
                     builder: (context) => home.ProductDetailPage(
                       product: product,
-                      onAddToCart: addToCart, // Pass add to cart function
+                      onAddToCart: addToCart,
                     ),
                   ),
                 );
@@ -266,8 +272,8 @@ class _HomeState extends State<Home> {
                 price: product['price'],
                 image: product['image'],
                 cardColor: product['color'],
-                onAddToCart: () => addToCart(product), // Add to cart
-                onFavorite: () => addToFavorites(product), // Add to favorites
+                onAddToCart: () => addToCart(product),
+                onFavorite: () => addToFavorites(product),
               ),
             ),
           );
@@ -304,7 +310,7 @@ class ProductCard extends StatelessWidget {
   final String image;
   final Color cardColor;
   final VoidCallback onAddToCart;
-  final VoidCallback onFavorite; // New callback for favorite button
+  final VoidCallback onFavorite;
 
   ProductCard({
     required this.productName,
@@ -312,7 +318,7 @@ class ProductCard extends StatelessWidget {
     required this.image,
     required this.cardColor,
     required this.onAddToCart,
-    required this.onFavorite, // New parameter for favorite button
+    required this.onFavorite,
   });
 
   @override
@@ -324,9 +330,9 @@ class ProductCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 5,
-            blurRadius: 10,
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 3,
+            blurRadius: 7,
             offset: Offset(0, 3),
           ),
         ],
@@ -335,58 +341,32 @@ class ProductCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                image: DecorationImage(
-                  image: AssetImage(image),
-                  fit: BoxFit.cover,
-                ),
-              ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.asset(image, fit: BoxFit.cover),
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(
-              productName,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text(productName, style: TextStyle(fontSize: 16)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  price,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.green,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.favorite_border, color: Colors.red),
-                  onPressed: onFavorite, // Trigger favorite action
-                ),
-              ],
-            ),
+            child: Text(price,
+                style: TextStyle(fontSize: 14, color: Colors.green)),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: onAddToCart,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add, size: 16), // Add "+" icon here
-                  SizedBox(width: 4), // Add some spacing
-                  Text('Add to Cart'),
-                ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: Icon(Icons.favorite_border),
+                onPressed: onFavorite,
               ),
-            ),
+              IconButton(
+                icon: Icon(Icons.add_shopping_cart),
+                onPressed: onAddToCart,
+              ),
+            ],
           ),
         ],
       ),

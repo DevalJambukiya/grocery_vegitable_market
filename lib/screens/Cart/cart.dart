@@ -10,7 +10,7 @@ class CartItem {
   final String imagePath;
   int quantity;
   final double price;
-  final int stock; // Stock available for the item
+  final int stock;
 
   CartItem({
     required this.name,
@@ -30,8 +30,7 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  final List<CartItem> cartItems =
-      []; // Fixed variable name and added semicolon
+  final List<CartItem> cartItems = [];
 
   @override
   void initState() {
@@ -40,40 +39,28 @@ class _CartPageState extends State<CartPage> {
     cartItems.addAll([
       CartItem(
           name: "Apple",
-          imagePath: "assets/images/apple.png",
+          imagePath: "assets/Fruit/red_apple.jpeg",
           quantity: 1,
           price: 0.99,
           stock: 100),
       CartItem(
           name: "Banana",
-          imagePath: "assets/images/banana.png",
+          imagePath: "assets/Fruit/organic_bananas.jpeg", // Fixed typo
           quantity: 1,
           price: 0.59,
           stock: 150),
       CartItem(
-          name: "Orange",
-          imagePath: "assets/images/orange.png",
+          name: "Ginger",
+          imagePath: "assets/Vegitable/ginger.jpeg",
           quantity: 1,
           price: 0.79,
           stock: 80),
       CartItem(
-          name: "Strawberry",
-          imagePath: "assets/images/strawberry.png",
+          name: "Ginger",
+          imagePath: "assets/Vegitable/bell_pepper_red.jpeg",
           quantity: 1,
-          price: 2.49,
-          stock: 50),
-      CartItem(
-          name: "Grapes",
-          imagePath: "assets/images/grapes.png",
-          quantity: 1,
-          price: 3.99,
-          stock: 30),
-      CartItem(
-          name: "Watermelon",
-          imagePath: "assets/images/watermelon.png",
-          quantity: 1,
-          price: 4.99,
-          stock: 20),
+          price: 0.79,
+          stock: 80),
     ]);
   }
 
@@ -122,25 +109,90 @@ class _CartPageState extends State<CartPage> {
 
   double get total => cartItems.fold(0, (sum, item) => sum + item.totalPrice);
 
+  void _showCheckoutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Checkout'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Select Address:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  items: ['Home', 'Office', 'Other'].map((String address) {
+                    return DropdownMenuItem<String>(
+                      value: address,
+                      child: Text(address),
+                    );
+                  }).toList(),
+                  onChanged: (value) {},
+                  hint: Text('Select Address'),
+                ),
+                SizedBox(height: 16),
+                Text('Payment Total: \$${total.toStringAsFixed(2)}',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Handle place order logic here
+                Navigator.of(context).pop();
+                _showOrderConfirmation();
+              },
+              child: Text('Place Order'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showOrderConfirmation() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Order Placed'),
+          content: Text('Your order has been successfully placed!'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Cart Page'),
         centerTitle: true,
-        backgroundColor: Color.fromARGB(255, 243, 248, 244),
+        backgroundColor: Colors.green,
       ),
-      body: cartItems.isEmpty // Fixed variable name
+      body: cartItems.isEmpty
           ? _buildEmptyCart()
-          : Scrollbar(
-              thumbVisibility: true,
-              child: ListView.builder(
-                padding: EdgeInsets.all(8),
-                itemCount: cartItems.length,
-                itemBuilder: (context, index) {
-                  return _buildCartItem(cartItems[index], index);
-                },
-              ),
+          : ListView.builder(
+              padding: EdgeInsets.all(8),
+              itemCount: cartItems.length,
+              itemBuilder: (context, index) {
+                return _buildCartItem(cartItems[index], index);
+              },
             ),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
@@ -251,9 +303,8 @@ class _CartPageState extends State<CartPage> {
           Text('Total: \$${total.toStringAsFixed(2)}',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           ElevatedButton(
-            onPressed: () {
-              // Handle checkout action
-            },
+            onPressed:
+                _showCheckoutDialog, // Show checkout dialog on button click
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
