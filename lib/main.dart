@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/Admin/screens/dashboard.dart';
 import 'package:grocery_vegitable_market/screens/Account/account.dart';
 import 'package:grocery_vegitable_market/screens/Explore/beverages%20.dart';
 import 'package:grocery_vegitable_market/screens/Explore/explore.dart';
 import 'package:grocery_vegitable_market/screens/Explore/fruit.dart';
+import 'package:grocery_vegitable_market/screens/Favorites/favoritepage.dart';
 
 import 'package:grocery_vegitable_market/screens/home/Home.dart';
 // import 'package:grocery_vegitable_market/screens/selectlocation';
@@ -27,14 +29,16 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      //home: const Splashscreen(),
+      home: const Splashscreen(),
       //home: LoginPage(),
       //home: SelectLocationPage(),
-      home: Home(),
+      //home: Home(),
       //home: Account(),
       //home: ExplorePage(),
       //home: BeverageScreen(),
       //home: FruitPage(),
+      //home: FavoritePage(),
+      //home: DashboardApp(),
 
       routes: {
         '/welcome': (context) => const Welcomescreen(),

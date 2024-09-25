@@ -1,96 +1,128 @@
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/screens/Explore/fruit.dart';
+import 'package:provider/provider.dart';
+import 'package:grocery_vegitable_market/screens/Home/productdetailspage.dart';
 
+// Bakery model
+class BakeryItem {
+  final String name;
+  final double price;
+  final String imagePath;
+
+  BakeryItem(
+      {required this.name, required this.price, required this.imagePath});
+}
+
+// BakeryPage
 class BakeryPage extends StatelessWidget {
-  final List<Bakery> bakeryItems = [
-    Bakery("Bread", "assets/bread.png", 2.99, "500g"),
-    Bakery("Croissant", "assets/croissant.png", 1.50, "1 piece"),
-    Bakery("Muffin", "assets/muffin.png", 3.99, "1 piece"),
-    Bakery("Bagel", "assets/bagel.png", 2.50, "1 piece"),
-    Bakery("Cake", "assets/cake.png", 15.99, "1kg"),
-    Bakery("Doughnut", "assets/doughnut.png", 1.99, "1 piece"),
+  final List<BakeryItem> bakeryItems = [
+    BakeryItem(
+        name: 'Bread', price: 2.0, imagePath: 'assets/Bakery/bread.jpeg'),
+    BakeryItem(
+        name: 'Croissant',
+        price: 1.5,
+        imagePath: 'assets/Bakery/croissant.jpeg'),
+    BakeryItem(
+        name: 'Muffin', price: 1.0, imagePath: 'assets/Bakery/muffin.jpeg'),
+    BakeryItem(
+        name: 'Cookies', price: 1.2, imagePath: 'assets/Bakery/cookies.jpeg'),
+    BakeryItem(name: 'Cake', price: 3.5, imagePath: 'assets/Bakery/cake.jpeg'),
+    // Add more bakery items as needed
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bakery Items'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              // Add your action here
-            },
-          )
-        ],
+        title: Text('Bakery & Snacks'),
+        centerTitle: true,
+        backgroundColor: Colors.green,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 0.7, // Adjust for spacing between items
-          ),
-          itemCount: bakeryItems.length,
-          itemBuilder: (context, index) {
-            return BakeryCard(bakery: bakeryItems[index]);
-          },
+      body: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 8.0,
+          mainAxisSpacing: 8.0,
+          childAspectRatio: 0.7,
         ),
+        padding: const EdgeInsets.all(8.0),
+        itemCount: bakeryItems.length,
+        itemBuilder: (context, index) {
+          final bakeryItem = bakeryItems[index];
+          return _buildBakeryCard(context, bakeryItem);
+        },
       ),
     );
   }
-}
 
-class Bakery {
-  final String name;
-  final String imagePath;
-  final double price;
-  final String size;
-
-  Bakery(this.name, this.imagePath, this.price, this.size);
-}
-
-class BakeryCard extends StatelessWidget {
-  final Bakery bakery;
-
-  const BakeryCard({Key? key, required this.bakery}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildBakeryCard(BuildContext context, BakeryItem bakeryItem) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      elevation: 5,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Image.asset(
-            bakery.imagePath,
-            height: 80,
-            fit: BoxFit.contain,
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
+              image: DecorationImage(
+                image: AssetImage(bakeryItem.imagePath),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              bakeryItem.name,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
           ),
           Text(
-            bakery.name,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+            '\$${bakeryItem.price.toStringAsFixed(2)}',
+            style: TextStyle(color: Colors.brown, fontSize: 14),
           ),
-          Text(
-            bakery.size,
-            style: TextStyle(color: Colors.grey),
-          ),
-          Text(
-            "\$${bakery.price.toStringAsFixed(2)}",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          IconButton(
+          SizedBox(height: 4),
+          ElevatedButton(
             onPressed: () {
-              // Add to cart logic here
+              // Navigate to ProductDetailPage when clicking "View Details"
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetailPage(
+                    product: {
+                      'name': bakeryItem.name,
+                      'price': bakeryItem.price,
+                      'image': bakeryItem.imagePath,
+                      'description':
+                          'Enjoy a delicious ${bakeryItem.name}.', // Example description
+                    },
+                    onAddToCart: (product) {
+                      Provider.of<CartProvider>(context, listen: false)
+                          .addToCart(Bakery(
+                        name: product['name'],
+                        price: product['price'],
+                        imagePath: product['image'],
+                      ) as Fruit);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('${bakeryItem.name} added to cart!')),
+                      );
+                    },
+                  ),
+                ),
+              );
             },
-            icon: Icon(Icons.add_circle, color: Colors.green),
+            child: Text('View Details'),
           ),
         ],
       ),
     );
   }
+
+  Bakery({required name, required price, required imagePath}) {}
 }

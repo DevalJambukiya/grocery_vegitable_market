@@ -11,6 +11,7 @@ class MyApp extends StatelessWidget {
       title: 'Favorites Demo',
       theme: ThemeData(
         primarySwatch: Colors.green,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: FavoritePage(),
     );
@@ -23,43 +24,37 @@ class FavoritePage extends StatelessWidget {
       'name': 'Sprite Can',
       'size': '325ml',
       'price': 1.50,
-      'image': 'assets/Beverages/sprite can.jpeg',
+      'image': 'assets/Beverages/sprite_can.jpeg',
     },
     {
       'name': 'Diet Coke',
       'size': '335ml',
       'price': 1.99,
-      'image': 'assets/Beverages/Diet Coke.jpeg',
+      'image': 'assets/Beverages/diet_coke.jpeg',
     },
     {
       'name': 'Apple & Grape Juice',
       'size': '3 kg',
       'price': 15.50,
-      'image': 'assets/fruit/red_apple.jpeg',
+      'image': 'assets/Fruit/red_apple.jpeg',
     },
     {
       'name': 'Coca Cola Can',
       'size': '325ml',
       'price': 4.99,
-      'image': 'assets/Beverages/Coca Cola Can.jpeg',
+      'image': 'assets/Beverages/coca_cola_can.jpeg',
     },
     {
       'name': 'Ladie Finger',
       'size': '2 kg',
       'price': 4.99,
-      'image': 'assets/Vegitable/ladies finger.jpeg',
+      'image': 'assets/Vegitable/ladies_finger.jpeg',
     },
     {
       'name': 'Ginger',
       'size': '2 kg',
       'price': 4.99,
       'image': 'assets/Vegitable/ginger.jpeg',
-    },
-    {
-      'name': 'Cucumber',
-      'size': '2 kg',
-      'price': 4.99,
-      'image': 'assets/Vegitable/consumer.jpeg',
     },
   ];
 
@@ -72,7 +67,8 @@ class FavoritePage extends StatelessWidget {
           style: TextStyle(color: Colors.black),
         ),
         backgroundColor: const Color.fromARGB(255, 243, 248, 244),
-        elevation: 0,
+        centerTitle: true,
+        elevation: 1,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -88,14 +84,15 @@ class FavoritePage extends StatelessWidget {
               child: Scrollbar(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    int columnCount = (constraints.maxWidth / 180).floor();
+                    int columnCount = constraints.maxWidth < 600 ? 2 : 4;
                     return GridView.builder(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: columnCount,
-                        childAspectRatio: 0.75,
-                        crossAxisSpacing: 8.0,
-                        mainAxisSpacing: 8.0,
+                        childAspectRatio: 0.7, // Adjusted for more balance
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
                       ),
                       itemCount: favoriteItems.length,
                       itemBuilder: (context, index) {
@@ -116,48 +113,64 @@ class FavoritePage extends StatelessWidget {
 
   Widget _buildFavoriteItem(BuildContext context, Map<String, dynamic> item) {
     return Card(
-      elevation: 6,
-      margin: EdgeInsets.zero,
+      elevation: 5,
+      shadowColor: Colors.grey.withOpacity(0.3),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(15.0),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(10.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: Image.asset(
-                item['image'],
-                width: double.infinity,
-                height: 100,
-                fit: BoxFit.cover,
+              borderRadius: BorderRadius.circular(12.0),
+              child: AspectRatio(
+                aspectRatio: 1.3, // Consistent aspect ratio for images
+                child: Image.asset(
+                  item['image'],
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: double.infinity,
+                      color: Colors.grey.shade200,
+                      alignment: Alignment.center,
+                      child: const Text(
+                        'Image not found',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 10),
             Text(
               item['name'],
               style: TextStyle(
                 fontSize: MediaQuery.of(context).size.width < 400 ? 12 : 14,
                 fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 5),
             Text(
               item['size'],
               style: TextStyle(
                 fontSize: MediaQuery.of(context).size.width < 400 ? 10 : 12,
-                color: Colors.grey,
+                color: Colors.grey.shade600,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 8),
             Text(
               '\$${item['price'].toStringAsFixed(2)}',
               style: TextStyle(
                 fontSize: MediaQuery.of(context).size.width < 400 ? 12 : 14,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: Colors.green.shade700,
               ),
             ),
           ],
@@ -167,21 +180,34 @@ class FavoritePage extends StatelessWidget {
   }
 
   Widget _buildAddAllToCartButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade300,
+            offset: Offset(0, -2),
+            blurRadius: 6,
+          ),
+        ],
+      ),
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
-          icon: const Icon(Icons.shopping_cart, size: 18),
+          icon: const Icon(Icons.shopping_cart, size: 24),
           label: const Text(
             'Add All To Cart',
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(
+              fontSize: 18, // Larger font for better visibility
+              fontWeight: FontWeight.bold,
+            ),
           ),
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
-            backgroundColor: Colors.green,
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            backgroundColor: Colors.green.shade700,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(10.0),
             ),
           ),
           onPressed: () {

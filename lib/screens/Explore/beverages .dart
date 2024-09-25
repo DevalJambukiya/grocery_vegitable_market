@@ -1,18 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/screens/Explore/fruit.dart';
+import 'package:provider/provider.dart';
+import 'package:grocery_vegitable_market/screens/Home/productdetailspage.dart';
 
-void main() {
-  runApp(MaterialApp(home: BeverageScreen()));
+// Beverage model
+class Beverage {
+  final String name;
+  final double price;
+  final String imagePath;
+
+  Beverage({required this.name, required this.price, required this.imagePath});
 }
 
+// BeverageScreen
 class BeverageScreen extends StatelessWidget {
   final List<Beverage> beverages = [
-    Beverage("Diet Coke", "assets/diet_coke.png", 1.99, "355ml"),
-    Beverage("Sprite Can", "assets/sprite_can.png", 1.50, "325ml"),
     Beverage(
-        "Apple & Grape Juice", "assets/apple_grape_juice.png", 15.99, "2L"),
-    Beverage("Orange Juice", "assets/orange_juice.png", 15.99, "2L"),
-    Beverage("Coca Cola Can", "assets/coca_cola_can.png", 4.99, "325ml"),
-    Beverage("Pepsi Can", "assets/pepsi_can.png", 4.99, "330ml"),
+        name: 'Orange Juice',
+        price: 2.5,
+        imagePath: 'assets/Beverages/orange_juice.jpeg'),
+    Beverage(
+        name: 'Apple Juice',
+        price: 2.0,
+        imagePath: 'assets/Beverages/apple_juice.jpeg'),
+    Beverage(
+        name: 'Lemonade',
+        price: 1.5,
+        imagePath: 'assets/Beverages/lemonade.jpeg'),
+    Beverage(
+        name: 'Iced Tea',
+        price: 1.8,
+        imagePath: 'assets/Beverages/iced_tea.jpeg'),
+    // Add more beverage items as needed
   ];
 
   @override
@@ -20,79 +39,90 @@ class BeverageScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Beverages'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              // Add your action here
-            },
-          )
-        ],
+        centerTitle: true,
+        backgroundColor: Colors.green,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 0.7, // Adjust for spacing between items
-          ),
-          itemCount: beverages.length,
-          itemBuilder: (context, index) {
-            return BeverageCard(beverage: beverages[index]);
-          },
+      body: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 8.0,
+          mainAxisSpacing: 8.0,
+          childAspectRatio: 0.7,
         ),
+        padding: const EdgeInsets.all(8.0),
+        itemCount: beverages.length,
+        itemBuilder: (context, index) {
+          final beverage = beverages[index];
+          return _buildBeverageCard(context, beverage);
+        },
       ),
     );
   }
-}
 
-class Beverage {
-  final String name;
-  final String imagePath;
-  final double price;
-  final String size;
-
-  Beverage(this.name, this.imagePath, this.price, this.size);
-}
-
-class BeverageCard extends StatelessWidget {
-  final Beverage beverage;
-
-  const BeverageCard({Key? key, required this.beverage}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildBeverageCard(BuildContext context, Beverage beverage) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      elevation: 5,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Image.asset(
-            beverage.imagePath,
-            height: 80,
-            fit: BoxFit.contain,
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
+              image: DecorationImage(
+                image: AssetImage(beverage.imagePath),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              beverage.name,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
           ),
           Text(
-            beverage.name,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+            '\$${beverage.price.toStringAsFixed(2)}',
+            style: TextStyle(color: Colors.blue, fontSize: 14),
           ),
-          Text(
-            beverage.size,
-            style: TextStyle(color: Colors.grey),
-          ),
-          Text(
-            "\$${beverage.price.toStringAsFixed(2)}",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          IconButton(
+          SizedBox(height: 4),
+          ElevatedButton(
             onPressed: () {
-              // Add to cart logic here
+              // Navigate to ProductDetailPage when clicking "View Details"
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetailPage(
+                    product: {
+                      'name': beverage.name,
+                      'price': beverage.price,
+                      'image': beverage.imagePath,
+                      'description':
+                          'Refreshing ${beverage.name} for hot days.', // Example description
+                    },
+                    onAddToCart: (product) {
+                      Provider.of<CartProvider>(context, listen: false)
+                          .addToCart(Beverage(
+                        // Use Beverage instead of beverages
+                        name: product['name'],
+                        price: product['price'],
+                        imagePath: product['image'],
+                      ) as Fruit);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('${beverage.name} added to cart!')),
+                      );
+                    },
+                  ),
+                ),
+              );
             },
-            icon: Icon(Icons.add_circle, color: Colors.green),
+            child: Text('View Details'),
           ),
         ],
       ),

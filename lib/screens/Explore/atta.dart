@@ -1,93 +1,126 @@
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/screens/Explore/fruit.dart';
+import 'package:provider/provider.dart';
+import 'package:grocery_vegitable_market/screens/Home/productdetailspage.dart';
 
+// Atta model
+class Atta {
+  final String name;
+  final double price;
+  final String imagePath;
+
+  Atta({required this.name, required this.price, required this.imagePath});
+}
+
+// AttaPage
 class AttaPage extends StatelessWidget {
-  final List<Atta> attaItems = [
-    Atta("Wheat Flour", "assets/wheat_flour.png", 2.99, "1kg"),
-    Atta("Rice Flour", "assets/rice_flour.png", 3.50, "1kg"),
-    Atta("Besan (Gram Flour)", "assets/besan.png", 4.99, "1kg"),
-    Atta("Maida (All-Purpose Flour)", "assets/maida.png", 2.50, "1kg"),
-    Atta("Oats Flour", "assets/oats_flour.png", 5.99, "500g"),
-    Atta("Barley Flour", "assets/barley_flour.png", 6.99, "1kg"),
+  final List<Atta> attas = [
+    Atta(
+        name: 'Wheat Flour',
+        price: 2.0,
+        imagePath: 'assets/Atta/wheat_flour.jpeg'),
+    Atta(
+        name: 'Chickpea Flour',
+        price: 2.5,
+        imagePath: 'assets/Atta/chickpea_flour.jpeg'),
+    Atta(
+        name: 'Rice Flour',
+        price: 3.0,
+        imagePath: 'assets/Atta/rice_flour.jpeg'),
+    Atta(
+        name: 'Multigrain Flour',
+        price: 2.8,
+        imagePath: 'assets/Atta/multigrain_flour.jpeg'),
+    // Add more atta products as needed
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Atta Products'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              // Add your action here
-            },
-          )
-        ],
+        title: Text('Atta'),
+        centerTitle: true,
+        backgroundColor: Colors.green,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 0.7, // Adjust for spacing between items
-          ),
-          itemCount: attaItems.length,
-          itemBuilder: (context, index) {
-            return AttaCard(atta: attaItems[index]);
-          },
+      body: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 8.0,
+          mainAxisSpacing: 8.0,
+          childAspectRatio: 0.7,
         ),
+        padding: const EdgeInsets.all(8.0),
+        itemCount: attas.length,
+        itemBuilder: (context, index) {
+          final atta = attas[index];
+          return _buildAttaCard(context, atta);
+        },
       ),
     );
   }
-}
 
-class Atta {
-  final String name;
-  final String imagePath;
-  final double price;
-  final String size;
-
-  Atta(this.name, this.imagePath, this.price, this.size);
-}
-
-class AttaCard extends StatelessWidget {
-  final Atta atta;
-
-  const AttaCard({Key? key, required this.atta}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildAttaCard(BuildContext context, Atta atta) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      elevation: 5,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Image.asset(
-            atta.imagePath,
-            height: 80,
-            fit: BoxFit.contain,
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
+              image: DecorationImage(
+                image: AssetImage(atta.imagePath),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              atta.name,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
           ),
           Text(
-            atta.name,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+            '\$${atta.price.toStringAsFixed(2)}',
+            style: TextStyle(color: Colors.brown, fontSize: 14),
           ),
-          Text(
-            atta.size,
-            style: TextStyle(color: Colors.grey),
-          ),
-          Text(
-            "\$${atta.price.toStringAsFixed(2)}",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          IconButton(
+          SizedBox(height: 4),
+          ElevatedButton(
             onPressed: () {
-              // Add to cart logic here
+              // Navigate to ProductDetailPage when clicking "View Details"
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetailPage(
+                    product: {
+                      'name': atta.name,
+                      'price': atta.price,
+                      'image': atta.imagePath,
+                      'description':
+                          'High-quality ${atta.name} for your cooking needs.', // Example description
+                    },
+                    onAddToCart: (product) {
+                      Provider.of<CartProvider>(context, listen: false)
+                          .addToCart(Atta(
+                        name: product['name'],
+                        price: product['price'],
+                        imagePath: product['image'],
+                      ) as Fruit);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${atta.name} added to cart!')),
+                      );
+                    },
+                  ),
+                ),
+              );
             },
-            icon: Icon(Icons.add_circle, color: Colors.green),
+            child: Text('View Details'),
           ),
         ],
       ),

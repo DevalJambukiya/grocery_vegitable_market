@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/Admin/login.dart';
 import 'package:grocery_vegitable_market/screens/register.dart';
 import 'package:grocery_vegitable_market/screens/forgot/ForgotPassword.dart';
 import 'package:grocery_vegitable_market/screens/verification/verification.dart'; // Ensure this import path is correct
@@ -150,6 +151,32 @@ class _LoginPageState extends State<LoginPage> {
                           backgroundColor: Colors.green,
                         ),
                         child: Text('Log In', style: TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Admin Login Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  AdminLogin(), // Navigate to Admin Login page
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.all(16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          backgroundColor:
+                              Colors.blue, // Different color for admin button
+                        ),
+                        child: Text('Admin Log In',
+                            style: TextStyle(fontSize: 18)),
                       ),
                     ),
                     SizedBox(height: 16),

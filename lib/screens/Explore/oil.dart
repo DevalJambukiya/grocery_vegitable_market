@@ -1,43 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/screens/Explore/fruit.dart';
+import 'package:provider/provider.dart';
+import 'package:grocery_vegitable_market/screens/Home/productdetailspage.dart';
 
-class Oil extends StatelessWidget {
-  final List<Map<String, dynamic>> beverages = [
-    {
-      "name": "Diet Coke",
-      "image": "assets/diet_coke.png",
-      "size": "355ml",
-      "price": 1.99,
-    },
-    {
-      "name": "Sprite Can",
-      "image": "assets/sprite.png",
-      "size": "355ml",
-      "price": 1.50,
-    },
-    {
-      "name": "Apple & Grape Juice",
-      "image": "assets/apple_grape_juice.png",
-      "size": "2L",
-      "price": 15.99,
-    },
-    {
-      "name": "Orange Juice",
-      "image": "assets/orange_juice.png",
-      "size": "2L",
-      "price": 15.99,
-    },
-    {
-      "name": "Coca Cola Can",
-      "image": "assets/coca_cola.png",
-      "size": "355ml",
-      "price": 4.99,
-    },
-    {
-      "name": "Pepsi Can",
-      "image": "assets/pepsi.png",
-      "size": "330ml",
-      "price": 4.99,
-    },
+// Oil model
+class Oil {
+  final String name;
+  final double price;
+  final String imagePath;
+
+  Oil({required this.name, required this.price, required this.imagePath});
+}
+
+// CookingOilPage
+class CookingOilPage extends StatelessWidget {
+  final List<Oil> oils = [
+    Oil(
+        name: 'Sunflower Oil',
+        price: 3.0,
+        imagePath: 'assets/Oil/sunflower.jpeg'),
+    Oil(name: 'Olive Oil', price: 5.0, imagePath: 'assets/Oil/olive.jpeg'),
+    Oil(name: 'Coconut Oil', price: 4.5, imagePath: 'assets/Oil/coconut.jpeg'),
+    Oil(name: 'Palm Oil', price: 2.5, imagePath: 'assets/Oil/palm.jpeg'),
+    Oil(name: 'Ghee', price: 7.0, imagePath: 'assets/Oil/ghee.jpeg'),
+    // Add more oils as needed
   ];
 
   @override
@@ -45,99 +31,90 @@ class Oil extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Cooking Oil & Ghee'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              // Add functionality for settings if needed
-            },
-          ),
-        ],
+        centerTitle: true,
+        backgroundColor: Colors.green,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 8.0,
-            mainAxisSpacing: 8.0,
-            childAspectRatio: 0.6,
-          ),
-          itemCount: beverages.length,
-          itemBuilder: (context, index) {
-            final beverage = beverages[index];
-            return BeverageCard(
-              name: beverage['name'],
-              image: beverage['image'],
-              size: beverage['size'],
-              price: beverage['price'],
-            );
-          },
+      body: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 8.0,
+          mainAxisSpacing: 8.0,
+          childAspectRatio: 0.7,
         ),
+        padding: const EdgeInsets.all(8.0),
+        itemCount: oils.length,
+        itemBuilder: (context, index) {
+          final oil = oils[index];
+          return _buildOilCard(context, oil);
+        },
       ),
     );
   }
-}
 
-class BeverageCard extends StatelessWidget {
-  final String name;
-  final String image;
-  final String size;
-  final double price;
-
-  BeverageCard({
-    required this.name,
-    required this.image,
-    required this.size,
-    required this.price,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildOilCard(BuildContext context, Oil oil) {
     return Card(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10.0),
+        borderRadius: BorderRadius.circular(15.0),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Image.asset(
-              image,
-              height: 100,
-              width: 100,
-              fit: BoxFit.cover,
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              name,
-              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 4.0),
-            Text(
-              size,
-              style: TextStyle(fontSize: 12.0, color: Colors.grey),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              '\$$price',
-              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-            ),
-            Spacer(),
-            ElevatedButton(
-              onPressed: () {
-                // Add functionality for adding to cart
-              },
-              child: Icon(Icons.add, color: Colors.white),
-              style: ElevatedButton.styleFrom(
-                shape: CircleBorder(),
-                padding: EdgeInsets.all(10),
-                backgroundColor: Colors.green,
+      elevation: 5,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
+              image: DecorationImage(
+                image: AssetImage(oil.imagePath),
+                fit: BoxFit.cover,
               ),
             ),
-          ],
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              oil.name,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+          Text(
+            '\$${oil.price.toStringAsFixed(2)}',
+            style: TextStyle(color: Colors.green, fontSize: 14),
+          ),
+          SizedBox(height: 4),
+          ElevatedButton(
+            onPressed: () {
+              // Navigate to ProductDetailPage when clicking "View Details"
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetailPage(
+                    product: {
+                      'name': oil.name,
+                      'price': oil.price,
+                      'image': oil.imagePath,
+                      'description':
+                          'This is high-quality ${oil.name}.', // Example description
+                    },
+                    onAddToCart: (product) {
+                      Provider.of<CartProvider>(context, listen: false)
+                          .addToCart(Oil(
+                        name: product['name'],
+                        price: product['price'],
+                        imagePath: product['image'],
+                      ) as Fruit);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${oil.name} added to cart!')),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+            child: Text('View Details'),
+          ),
+        ],
       ),
     );
   }

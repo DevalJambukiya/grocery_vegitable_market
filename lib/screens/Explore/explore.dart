@@ -1,5 +1,12 @@
+// explore_page.dart
 import 'package:flutter/material.dart';
-import 'package:grocery_vegitable_market/screens/Explore/fruit.dart';
+import 'package:grocery_vegitable_market/screens/Explore/beverages%20.dart';
+import 'package:grocery_vegitable_market/screens/Explore/oil.dart';
+import 'vegetables.dart'; // Import the Vegetables Page
+import 'bakery.dart'; // Import the Bakery Page
+import 'atta.dart'; // Import the Atta Page
+import 'chocolate.dart'; // Import the Chocolate Page
+import 'fruit.dart'; // Import the Fruit Page
 
 void main() {
   runApp(MaterialApp(home: ExplorePage()));
@@ -24,7 +31,7 @@ class _ExplorePageState extends State<ExplorePage> {
   final List<String> _productImages = [
     'assets/explore/fruits.png',
     'assets/explore/oil.png',
-    'assets/explore/vegetable.png',
+    'assets/explore/vegitable.png',
     'assets/explore/bakery.png',
     'assets/explore/atta.png',
     'assets/explore/beverages.png',
@@ -106,11 +113,46 @@ class _ExplorePageState extends State<ExplorePage> {
               builder: (context) => FruitPage(),
             ),
           );
+        } else if (title == 'Cooking Oil & Ghee') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CookingOilPage(),
+            ),
+          );
+        } else if (title == 'Vegetables') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VegetablesPage(),
+            ),
+          );
+        } else if (title == 'Bakery & Snacks') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BakeryPage(),
+            ),
+          );
+        } else if (title == 'Atta') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AttaPage(),
+            ),
+          );
         } else if (title == 'Beverages') {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => BeverageScreen(),
+            ),
+          );
+        } else if (title == 'Chocolate') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChocolatePage(),
             ),
           );
         } else {
@@ -173,97 +215,6 @@ class ProductDetailPage extends StatelessWidget {
           'Details for $productName',
           style: TextStyle(fontSize: 24),
         ),
-      ),
-    );
-  }
-}
-
-// FruitPage
-
-// BeveragePage (already implemented previously)
-class BeverageScreen extends StatelessWidget {
-  final List<Beverage> beverages = [
-    Beverage("Diet Coke", "assets/diet_coke.png", 1.99, "355ml"),
-    Beverage("Sprite Can", "assets/sprite_can.png", 1.50, "325ml"),
-    Beverage(
-        "Apple & Grape Juice", "assets/apple_grape_juice.png", 15.99, "2L"),
-    Beverage("Orange Juice", "assets/orange_juice.png", 15.99, "2L"),
-    Beverage("Coca Cola Can", "assets/coca_cola_can.png", 4.99, "325ml"),
-    Beverage("Pepsi Can", "assets/pepsi_can.png", 4.99, "330ml"),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Beverages'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 0.7, // Adjust for spacing between items
-          ),
-          itemCount: beverages.length,
-          itemBuilder: (context, index) {
-            return BeverageCard(beverage: beverages[index]);
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class Beverage {
-  final String name;
-  final String imagePath;
-  final double price;
-  final String size;
-
-  Beverage(this.name, this.imagePath, this.price, this.size);
-}
-
-class BeverageCard extends StatelessWidget {
-  final Beverage beverage;
-
-  const BeverageCard({Key? key, required this.beverage}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Image.asset(
-            beverage.imagePath,
-            height: 80,
-            fit: BoxFit.contain,
-          ),
-          Text(
-            beverage.name,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          Text(
-            beverage.size,
-            style: TextStyle(color: Colors.grey),
-          ),
-          Text(
-            "\$${beverage.price.toStringAsFixed(2)}",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          IconButton(
-            onPressed: () {
-              // Add to cart logic here
-            },
-            icon: Icon(Icons.add_circle, color: Colors.green),
-          ),
-        ],
       ),
     );
   }

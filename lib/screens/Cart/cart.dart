@@ -1,26 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/screens/Home/productdetailspage.dart';
 
+// Main entry point
 void main() {
   runApp(MaterialApp(home: CartPage()));
-}
-
-// Class representing an item in the cart
-class CartItem {
-  final String name;
-  final String imagePath;
-  int quantity;
-  final double price;
-  final int stock;
-
-  CartItem({
-    required this.name,
-    required this.imagePath,
-    required this.quantity,
-    required this.price,
-    required this.stock,
-  });
-
-  double get totalPrice => price * quantity;
 }
 
 // Cart Page
@@ -31,6 +14,8 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   final List<CartItem> cartItems = [];
+  final TextEditingController _addressController = TextEditingController();
+  String _selectedPaymentMethod = 'Credit Card'; // Default payment method
 
   @override
   void initState() {
@@ -38,29 +23,29 @@ class _CartPageState extends State<CartPage> {
     // Add sample products to the cart
     cartItems.addAll([
       CartItem(
-          name: "Apple",
-          imagePath: "assets/Fruit/red_apple.jpeg",
-          quantity: 1,
-          price: 0.99,
-          stock: 100),
+        name: "Apple",
+        imagePath: "assets/Fruit/red_apple.jpeg",
+        quantity: 1,
+        price: 0.99,
+      ),
       CartItem(
-          name: "Banana",
-          imagePath: "assets/Fruit/organic_bananas.jpeg", // Fixed typo
-          quantity: 1,
-          price: 0.59,
-          stock: 150),
+        name: "Banana",
+        imagePath: "assets/Fruit/organic_bananas.jpeg",
+        quantity: 1,
+        price: 0.59,
+      ),
       CartItem(
-          name: "Ginger",
-          imagePath: "assets/Vegitable/ginger.jpeg",
-          quantity: 1,
-          price: 0.79,
-          stock: 80),
+        name: "Ginger",
+        imagePath: "assets/Vegitable/ginger.jpeg",
+        quantity: 1,
+        price: 0.79,
+      ),
       CartItem(
-          name: "Ginger",
-          imagePath: "assets/Vegitable/bell_pepper_red.jpeg",
-          quantity: 1,
-          price: 0.79,
-          stock: 80),
+        name: "Bell Pepper",
+        imagePath: "assets/Vegitable/bell_pepper_red.jpeg",
+        quantity: 1,
+        price: 0.79,
+      ),
     ]);
   }
 
@@ -71,12 +56,6 @@ class _CartPageState extends State<CartPage> {
       } else {
         cartItems[index].quantity = newQuantity;
       }
-    });
-  }
-
-  void _clearCart() {
-    setState(() {
-      cartItems.clear();
     });
   }
 
@@ -107,51 +86,87 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  double get total => cartItems.fold(0, (sum, item) => sum + item.totalPrice);
+  void _navigateToProductDetail(CartItem item) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProductDetailPage(
+          product: {
+            'name': item.name,
+            'image': item.imagePath,
+            'price': item.price,
+            'description': 'A delicious ${item.name}.', // Example description
+          },
+          onAddToCart: (Map<String, dynamic> product) {
+            setState(() {
+              // Increment the quantity of the product in the cart
+              cartItems
+                  .firstWhere((cartItem) => cartItem.name == product['name'])
+                  .quantity += 1;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  double get total {
+    double total = 0.0;
+    for (var item in cartItems) {
+      total += item.totalPrice;
+    }
+    return total;
+  }
 
   void _showCheckoutDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Checkout'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Select Address:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  items: ['Home', 'Office', 'Other'].map((String address) {
-                    return DropdownMenuItem<String>(
-                      value: address,
-                      child: Text(address),
-                    );
-                  }).toList(),
-                  onChanged: (value) {},
-                  hint: Text('Select Address'),
-                ),
-                SizedBox(height: 16),
-                Text('Payment Total: \$${total.toStringAsFixed(2)}',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-              ],
-            ),
+          title: Text("Checkout"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _addressController,
+                decoration: InputDecoration(labelText: "Delivery Address"),
+              ),
+              DropdownButton<String>(
+                value: _selectedPaymentMethod,
+                items: <String>['Credit Card', 'PayPal', 'Cash on Delivery']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedPaymentMethod = newValue!;
+                  });
+                },
+              ),
+              SizedBox(height: 10),
+              Text("Total: \$${total.toStringAsFixed(2)}"),
+            ],
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
               onPressed: () {
-                // Handle place order logic here
-                Navigator.of(context).pop();
-                _showOrderConfirmation();
+                if (_addressController.text.isNotEmpty) {
+                  Navigator.of(context).pop();
+                  _showOrderConfirmationDialog();
+                  _clearCart(); // Clear the cart after checkout
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please enter your address.')),
+                  );
+                }
               },
-              child: Text('Place Order'),
+              child: Text("Place Order"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Cancel"),
             ),
           ],
         );
@@ -159,21 +174,32 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  void _showOrderConfirmation() {
+  void _showOrderConfirmationDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Order Placed'),
-          content: Text('Your order has been successfully placed!'),
+          title: Text("Order Successful"),
+          content: Text("Your order has been placed successfully!"),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
+              child: Text("OK"),
             ),
           ],
         );
       },
+    );
+  }
+
+  void _clearCart() {
+    setState(() {
+      cartItems.clear();
+      _addressController.clear(); // Clear the address field
+      _selectedPaymentMethod = 'Credit Card'; // Reset to default payment method
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Cart has been cleared!')),
     );
   }
 
@@ -183,7 +209,7 @@ class _CartPageState extends State<CartPage> {
       appBar: AppBar(
         title: Text('Cart Page'),
         centerTitle: true,
-        backgroundColor: Colors.green,
+        backgroundColor: const Color.fromARGB(255, 243, 248, 244),
       ),
       body: cartItems.isEmpty
           ? _buildEmptyCart()
@@ -191,7 +217,10 @@ class _CartPageState extends State<CartPage> {
               padding: EdgeInsets.all(8),
               itemCount: cartItems.length,
               itemBuilder: (context, index) {
-                return _buildCartItem(cartItems[index], index);
+                return GestureDetector(
+                  onTap: () => _navigateToProductDetail(cartItems[index]),
+                  child: _buildCartItem(cartItems[index], index),
+                );
               },
             ),
       bottomNavigationBar: _buildBottomNavigationBar(),
@@ -247,11 +276,6 @@ class _CartPageState extends State<CartPage> {
                           color: Colors.grey[700])),
                   SizedBox(height: 8),
                   _buildQuantityControls(item, index),
-                  Text('In Stock: ${item.stock}',
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                          fontStyle: FontStyle.italic)),
                 ],
               ),
             ),
@@ -271,7 +295,7 @@ class _CartPageState extends State<CartPage> {
       children: [
         IconButton(
           onPressed: () => _updateQuantity(index, item.quantity - 1),
-          icon: Icon(Icons.remove, color: Colors.green),
+          icon: Icon(Icons.remove, color: Colors.red),
         ),
         Text('${item.quantity}',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -301,21 +325,37 @@ class _CartPageState extends State<CartPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Total: \$${total.toStringAsFixed(2)}',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black)),
           ElevatedButton(
-            onPressed:
-                _showCheckoutDialog, // Show checkout dialog on button click
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25)),
-              backgroundColor: Colors.green,
-            ),
-            child: Text('Checkout',
-                style: TextStyle(fontSize: 18, color: Colors.white)),
+            onPressed: () {
+              if (cartItems.isNotEmpty) {
+                _showCheckoutDialog();
+              }
+            },
+            child: Text('Checkout'),
           ),
         ],
       ),
     );
   }
+}
+
+// CartItem Class
+class CartItem {
+  final String name;
+  final String imagePath;
+  int quantity;
+  final double price;
+
+  CartItem({
+    required this.name,
+    required this.imagePath,
+    required this.quantity,
+    required this.price,
+  });
+
+  double get totalPrice => price * quantity;
 }

@@ -1,13 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/screens/Explore/fruit.dart';
+import 'package:provider/provider.dart';
+import 'package:grocery_vegitable_market/screens/Home/productdetailspage.dart';
 
-class VegetablePage extends StatelessWidget {
+// Vegetable model
+class Vegetable {
+  final String name;
+  final double price;
+  final String imagePath;
+
+  Vegetable({required this.name, required this.price, required this.imagePath});
+}
+
+// VegetablesPage
+class VegetablesPage extends StatelessWidget {
   final List<Vegetable> vegetables = [
-    Vegetable("Carrot", "assets/carrot.png", 1.99, "1kg"),
-    Vegetable("Tomato", "assets/tomato.png", 2.50, "1kg"),
-    Vegetable("Potato", "assets/potato.png", 3.00, "2kg"),
-    Vegetable("Onion", "assets/onion.png", 1.50, "1kg"),
-    Vegetable("Broccoli", "assets/broccoli.png", 4.99, "500g"),
-    Vegetable("Spinach", "assets/spinach.png", 2.99, "300g"),
+    Vegetable(
+        name: 'Carrot', price: 1.0, imagePath: 'assets/Vegitable/carrot.jpeg'),
+    Vegetable(
+        name: 'Tomato', price: 0.75, imagePath: 'assets/Vegitable/tomato.jpeg'),
+    Vegetable(
+        name: 'Broccoli',
+        price: 1.5,
+        imagePath: 'assets/Vegitable/broccoli.jpeg'),
+    Vegetable(
+        name: 'Spinach',
+        price: 2.0,
+        imagePath: 'assets/Vegitable/spinach.jpeg'),
+    Vegetable(
+        name: 'Potato', price: 0.5, imagePath: 'assets/Vegitable/potato.jpeg'),
+    // Add more vegetables as needed
   ];
 
   @override
@@ -15,79 +37,89 @@ class VegetablePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Vegetables'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              // Add your action here
-            },
-          )
-        ],
+        centerTitle: true,
+        backgroundColor: Colors.green,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 0.7, // Adjust for spacing between items
-          ),
-          itemCount: vegetables.length,
-          itemBuilder: (context, index) {
-            return VegetableCard(vegetable: vegetables[index]);
-          },
+      body: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 8.0,
+          mainAxisSpacing: 8.0,
+          childAspectRatio: 0.7,
         ),
+        padding: const EdgeInsets.all(8.0),
+        itemCount: vegetables.length,
+        itemBuilder: (context, index) {
+          final vegetable = vegetables[index];
+          return _buildVegetableCard(context, vegetable);
+        },
       ),
     );
   }
-}
 
-class Vegetable {
-  final String name;
-  final String imagePath;
-  final double price;
-  final String size;
-
-  Vegetable(this.name, this.imagePath, this.price, this.size);
-}
-
-class VegetableCard extends StatelessWidget {
-  final Vegetable vegetable;
-
-  const VegetableCard({Key? key, required this.vegetable}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildVegetableCard(BuildContext context, Vegetable vegetable) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      elevation: 5,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Image.asset(
-            vegetable.imagePath,
-            height: 80,
-            fit: BoxFit.contain,
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
+              image: DecorationImage(
+                image: AssetImage(vegetable.imagePath),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              vegetable.name,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
           ),
           Text(
-            vegetable.name,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+            '\$${vegetable.price.toStringAsFixed(2)}',
+            style: TextStyle(color: Colors.green, fontSize: 14),
           ),
-          Text(
-            vegetable.size,
-            style: TextStyle(color: Colors.grey),
-          ),
-          Text(
-            "\$${vegetable.price.toStringAsFixed(2)}",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          IconButton(
+          SizedBox(height: 4),
+          ElevatedButton(
             onPressed: () {
-              // Add to cart logic here
+              // Navigate to ProductDetailPage when clicking "View Details"
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetailPage(
+                    product: {
+                      'name': vegetable.name,
+                      'price': vegetable.price,
+                      'image': vegetable.imagePath,
+                      'description':
+                          'This is fresh ${vegetable.name}.', // Example description
+                    },
+                    onAddToCart: (product) {
+                      Provider.of<CartProvider>(context, listen: false)
+                          .addToCart(Vegetable(
+                        name: product['name'],
+                        price: product['price'],
+                        imagePath: product['image'],
+                      ) as Fruit);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('${vegetable.name} added to cart!')),
+                      );
+                    },
+                  ),
+                ),
+              );
             },
-            icon: Icon(Icons.add_circle, color: Colors.green),
+            child: Text('View Details'),
           ),
         ],
       ),
