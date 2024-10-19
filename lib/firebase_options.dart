@@ -85,5 +85,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'grocery-vegetable-market-215f9.appspot.com',
     measurementId: 'G-5V2EB66DPE',
   );
-
 }
