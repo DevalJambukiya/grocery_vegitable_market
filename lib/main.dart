@@ -1,20 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:grocery_vegitable_market/Admin/screens/Delivery_boy_details.dart';
-import 'package:grocery_vegitable_market/Admin/screens/dashboard.dart';
-import 'package:grocery_vegitable_market/screens/Account/account.dart';
-import 'package:grocery_vegitable_market/screens/Account/delivery_add.dart';
-import 'package:grocery_vegitable_market/screens/Explore/beverages%20.dart';
-import 'package:grocery_vegitable_market/screens/Explore/explore.dart';
-import 'package:grocery_vegitable_market/screens/Explore/fruit.dart';
-import 'package:grocery_vegitable_market/screens/Favorites/favoritepage.dart';
-import 'package:grocery_vegitable_market/screens/home/Home.dart';
 import 'package:grocery_vegitable_market/screens/login.dart';
 import 'package:grocery_vegitable_market/screens/register.dart';
-import 'package:grocery_vegitable_market/screens/splashscreen.dart';
 import 'package:grocery_vegitable_market/screens/welcomescreen.dart';
-import 'package:grocery_vegitable_market/navigation/navigation_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
