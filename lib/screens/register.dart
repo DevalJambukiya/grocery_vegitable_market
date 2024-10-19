@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:grocery_vegitable_market/screens/verification/verification.dart'; // Update the import path as necessary
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:grocery_vegitable_market/screens/verification/verification.dart'; // Update this as necessary
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -9,14 +11,19 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-  final _formKey = GlobalKey<FormState>(); // Form key for validation
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
 
   bool _obscureText = true;
+  bool _isLoading = false;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -24,18 +31,53 @@ class _RegisterState extends State<Register> {
     });
   }
 
-  void _register() {
+  Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
-      // After validation, navigate to the Email Verification page
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EmailVerificationPage(
-            email: _emailController
-                .text, // Pass the email to the verification page
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        // Register the user using Firebase Authentication
+        UserCredential userCredential =
+            await _auth.createUserWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
+        // Add user details to Firestore (excluding the password)
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          'full_name': _fullNameController.text,
+          'email': _emailController.text,
+          'address': _addressController.text,
+          'created_at': FieldValue.serverTimestamp(),
+        });
+
+        // Navigate to the Email Verification page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationPage(
+              email:
+                  _emailController.text, // Pass the email to verification page
+            ),
           ),
-        ),
-      );
+        );
+      } on FirebaseAuthException catch (e) {
+        String errorMessage = 'An error occurred. Please try again.';
+        if (e.code == 'email-already-in-use') {
+          errorMessage = 'The email is already in use by another account.';
+        } else if (e.code == 'weak-password') {
+          errorMessage = 'The password provided is too weak.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -56,14 +98,14 @@ class _RegisterState extends State<Register> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Responsive image height and width for registration
+                // Responsive image for registration page
                 Padding(
                   padding: const EdgeInsets.only(bottom: 40),
                   child: Image.asset(
                     'assets/Logo/carrot.png',
                     height: screenHeight * 0.1, // 10% of screen height
                     width: screenWidth * 0.2, // 20% of screen width
-                    fit: BoxFit.contain, // Keeps aspect ratio intact
+                    fit: BoxFit.contain,
                   ),
                 ),
                 Text(
@@ -114,6 +156,22 @@ class _RegisterState extends State<Register> {
                     String pattern = r'\w+@\w+\.\w+';
                     if (!RegExp(pattern).hasMatch(value)) {
                       return 'Please enter a valid email address';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 16),
+
+                // Address TextField
+                TextFormField(
+                  controller: _addressController,
+                  decoration: InputDecoration(
+                    labelText: 'Address',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your address';
                     }
                     return null;
                   },
@@ -172,11 +230,11 @@ class _RegisterState extends State<Register> {
                 ),
                 SizedBox(height: 16),
 
-                // Register Button
+                // Register Button with Loading Spinner
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _register,
+                    onPressed: _isLoading ? null : _register,
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.all(16),
                       shape: RoundedRectangleBorder(
@@ -184,7 +242,9 @@ class _RegisterState extends State<Register> {
                       ),
                       backgroundColor: Colors.green,
                     ),
-                    child: Text('Register', style: TextStyle(fontSize: 18)),
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text('Register', style: TextStyle(fontSize: 18)),
                   ),
                 ),
                 SizedBox(height: 16),
