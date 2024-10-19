@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/screens/verification/verification.dart';
 import 'package:grocery_vegitable_market/Admin/login.dart';
 import 'package:grocery_vegitable_market/screens/register.dart';
 import 'package:grocery_vegitable_market/screens/forgot/ForgotPassword.dart';
-import 'package:grocery_vegitable_market/screens/verification/verification.dart'; // Ensure this import path is correct
 
 class LoginPage extends StatefulWidget {
   @override
@@ -10,16 +12,67 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>(); // Form key for validation
+  final _formKey = GlobalKey<FormState>();
   bool _obscureText = true;
-
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   void _togglePasswordVisibility() {
     setState(() {
       _obscureText = !_obscureText;
     });
+  }
+
+  Future<void> _loginUser() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        // Sign in the user using Firebase Authentication
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
+        // Fetch user data from Firestore 'register' collection
+        DocumentSnapshot userData = await _firestore
+            .collection(
+                'register') // Ensure this matches your Firestore collection name
+            .doc(userCredential.user!.uid) // Use UID to get user data
+            .get();
+
+        if (userData.exists) {
+          // Retrieve the name from Firestore
+          String userName = userData['name'];
+
+          // Show a message or perform another action
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Welcome, $userName!")),
+          );
+
+          // Navigate to the EmailVerificationPage (or another page)
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EmailVerificationPage(
+                email: _emailController.text,
+              ),
+            ),
+          );
+        } else {
+          // If user data is not found, sign the user out and show an error message
+          _auth.signOut();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("User data not found in the database")),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Login failed: ${e.toString()}")),
+        );
+      }
+    }
   }
 
   @override
@@ -37,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             child: IntrinsicHeight(
               child: Form(
-                key: _formKey, // Assign the form key
+                key: _formKey,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -74,12 +127,11 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please fill in your email'; // Error if email is empty
+                          return 'Please fill in your email';
                         }
-                        String pattern =
-                            r'\w+@\w+\.\w+'; // Regex for basic email validation
+                        String pattern = r'\w+@\w+\.\w+';
                         if (!RegExp(pattern).hasMatch(value)) {
-                          return 'Please enter a valid email address'; // Error if invalid email
+                          return 'Please enter a valid email address';
                         }
                         return null;
                       },
@@ -102,10 +154,10 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please fill in your password'; // Error if password is empty
+                          return 'Please fill in your password';
                         }
                         if (value.length < 6) {
-                          return 'Password must be at least 6 characters long'; // Error for short password
+                          return 'Password must be at least 6 characters long';
                         }
                         return null;
                       },
@@ -129,20 +181,7 @@ class _LoginPageState extends State<LoginPage> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            // If the form is valid, navigate to EmailVerificationPage
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EmailVerificationPage(
-                                  email:
-                                      _emailController.text, // Pass the email
-                                ),
-                              ),
-                            );
-                          }
-                        },
+                        onPressed: _loginUser, // Call the login function
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.all(16),
                           shape: RoundedRectangleBorder(
@@ -154,7 +193,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    // Admin Login Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -162,8 +200,7 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  AdminLogin(), // Navigate to Admin Login page
+                              builder: (context) => AdminLogin(),
                             ),
                           );
                         },
@@ -172,8 +209,7 @@ class _LoginPageState extends State<LoginPage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          backgroundColor:
-                              Colors.blue, // Different color for admin button
+                          backgroundColor: Colors.blue,
                         ),
                         child: Text('Admin Log In',
                             style: TextStyle(fontSize: 18)),

@@ -4,7 +4,8 @@ import 'package:grocery_vegitable_market/screens/home/Home.dart';
 class EmailVerificationPage extends StatefulWidget {
   final String email;
 
-  EmailVerificationPage({required this.email});
+  const EmailVerificationPage({required this.email, Key? key})
+      : super(key: key);
 
   @override
   _EmailVerificationPageState createState() => _EmailVerificationPageState();
@@ -12,20 +13,24 @@ class EmailVerificationPage extends StatefulWidget {
 
 class _EmailVerificationPageState extends State<EmailVerificationPage> {
   final _formKey = GlobalKey<FormState>(); // Form key for validation
-  final _verificationCodeController = TextEditingController();
+  final TextEditingController _verificationCodeController =
+      TextEditingController();
+  bool _isLoading = false; // Loading indicator flag
 
   // Method to verify the code
-  void _verifyCode() {
-    // Print to console for debugging
-    print("Button Pressed");
-
-    // Check if the form is valid
+  Future<void> _verifyCode() async {
     if (_formKey.currentState!.validate()) {
-      print("Form is valid");
+      setState(() {
+        _isLoading = true; // Show loading indicator
+      });
 
-      // If the entered code matches the dummy code '123456'
+      await Future.delayed(
+          const Duration(seconds: 2)); // Simulate async verification delay
+
       if (_verificationCodeController.text == '123456') {
-        print("Verification successful!");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Verification successful!')),
+        );
 
         // Navigate to the Home page if successful
         Navigator.pushReplacement(
@@ -33,22 +38,28 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
           MaterialPageRoute(builder: (context) => Home()),
         );
       } else {
-        print("Invalid verification code");
-
-        // Show error message if the verification code is incorrect
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Invalid verification code'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid verification code')),
+        );
       }
-    } else {
-      print("Form is invalid");
+
+      setState(() {
+        _isLoading = false; // Hide loading indicator
+      });
     }
+  }
+
+  @override
+  void dispose() {
+    _verificationCodeController
+        .dispose(); // Dispose of controller when not needed
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Email Verification')),
+      appBar: AppBar(title: const Text('Email Verification')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -59,12 +70,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               Text(
                 'A verification code has been sent to ${widget.email}',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18),
+                style: const TextStyle(fontSize: 18),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _verificationCodeController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Enter Verification Code',
                   border: OutlineInputBorder(),
                 ),
@@ -79,19 +90,25 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 },
                 keyboardType: TextInputType.number,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _verifyCode, // Calls the verification method
+                  onPressed: _isLoading
+                      ? null
+                      : _verifyCode, // Disable button when loading
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     backgroundColor: Colors.green,
                   ),
-                  child: Text('Verify', style: TextStyle(fontSize: 18)),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text('Verify', style: TextStyle(fontSize: 18)),
                 ),
               ),
             ],

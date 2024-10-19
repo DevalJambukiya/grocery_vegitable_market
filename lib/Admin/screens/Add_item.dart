@@ -1,33 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/Admin/screens/add%20item/add_item_form_page.dart';
+import 'package:grocery_vegitable_market/Admin/screens/add%20item/edit_item_page.dart';
+import 'package:grocery_vegitable_market/Admin/screens/add%20item/item_card.dart';
 
-class AddItemPage extends StatelessWidget {
+class AddItemPage extends StatefulWidget {
+  @override
+  _AddItemPageState createState() => _AddItemPageState();
+}
+
+class _AddItemPageState extends State<AddItemPage> {
   final List<Map<String, dynamic>> items = [
     {
       'image': 'assets/Vegitable/bell_pepper_red.jpeg',
       'name': 'Bell Pepper Red',
+      'stock': 10,
       'price': 15.99,
+      'details': 'Fresh red bell pepper',
+      'category': 'Vegetables',
     },
     {
       'image': 'assets/Fruit/banana.jpeg',
       'name': 'Organic Bananas',
+      'stock': 20,
       'price': 15.99,
+      'details': 'High-quality organic bananas',
+      'category': 'Fruits',
     },
     {
       'image': 'assets/Vegitable/ginger.jpeg',
       'name': 'Ginger',
+      'stock': 15,
       'price': 15.99,
+      'details': 'Fresh ginger root',
+      'category': 'Vegetables',
     },
     {
       'image': 'assets/Beverages/pepsi.jpeg',
       'name': 'Pepsi Can',
+      'stock': 30,
       'price': 15.99,
+      'details': 'Refreshing Pepsi drink',
+      'category': 'Beverages',
     },
     {
       'image': 'assets/Beverages/apple_juice.jpeg',
       'name': 'Apple Juice',
+      'stock': 25,
       'price': 15.99,
+      'details': 'Natural apple juice',
+      'category': 'Beverages',
     },
   ];
+
+  void _deleteItem(int index) {
+    setState(() {
+      items.removeAt(index);
+    });
+  }
+
+  void _addItem(Map<String, dynamic> newItem) {
+    setState(() {
+      items.add(newItem);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,78 +74,38 @@ class AddItemPage extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.add),
               onPressed: () {
-                // Add action to add a new item
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddItemFormPage(onAddItem: _addItem),
+                  ),
+                );
               },
             ),
           ],
         ),
-        backgroundColor: Colors.green, // AppBar background color
+        backgroundColor: Colors.green,
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(
-            horizontal: MediaQuery.of(context).size.width *
-                0.02), // Dynamic horizontal padding
+          horizontal: MediaQuery.of(context).size.width * 0.02,
+        ),
         child: ListView.builder(
           itemCount: items.length,
           itemBuilder: (context, index) {
-            return ItemCard(item: items[index]);
+            return ItemCard(
+              item: items[index],
+              onEdit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditItemPage(item: items[index]),
+                  ),
+                );
+              },
+              onDelete: () => _deleteItem(index),
+            );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class ItemCard extends StatelessWidget {
-  final Map<String, dynamic> item;
-
-  const ItemCard({Key? key, required this.item}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Card(
-        elevation: 2,
-        child: ListTile(
-          leading: SizedBox(
-            width: 50, // Fixed width for the image
-            height: 50, // Fixed height for the image
-            child: Image.asset(
-              item['image'],
-              fit: BoxFit.cover, // Ensure the image fits within the box
-            ),
-          ),
-          title: Flexible(
-            child: Text(
-              item['name'],
-              overflow: TextOverflow.ellipsis, // Prevent overflow with ellipsis
-            ),
-          ),
-          subtitle: Text('WW-DR-GR-XS001'),
-          trailing: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('\$${item['price'].toStringAsFixed(2)}'),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.edit),
-                    onPressed: () {
-                      // Add edit functionality
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      // Add delete functionality
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
         ),
       ),
     );

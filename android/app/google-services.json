@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "243939484600",
+    "project_id": "grocery-vegetable-market-215f9",
+    "storage_bucket": "grocery-vegetable-market-215f9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:243939484600:android:27da5344c5ba7a9593254d",
+        "android_client_info": {
+          "package_name": "com.example.grocery_vegitable_market"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAag9sX1VGnL013PEpLuLil403KbmkqejI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

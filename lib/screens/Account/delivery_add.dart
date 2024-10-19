@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 
+void main() {
+  runApp(MaterialApp(
+    home: DeliveryAddressPage(),
+  ));
+}
+
 class DeliveryAddressPage extends StatefulWidget {
   @override
   _DeliveryAddressPageState createState() => _DeliveryAddressPageState();
@@ -9,7 +15,6 @@ class _DeliveryAddressPageState extends State<DeliveryAddressPage> {
   final TextEditingController _addressController = TextEditingController();
   String _savedAddress = '';
 
-  // Function to handle form submission
   void _submitAddress() {
     if (_addressController.text.isNotEmpty) {
       setState(() {
@@ -23,6 +28,35 @@ class _DeliveryAddressPageState extends State<DeliveryAddressPage> {
         SnackBar(content: Text("Please enter an address")),
       );
     }
+  }
+
+  void _editAddress() async {
+    // Initialize the controller with the current saved address
+    _addressController.text = _savedAddress;
+
+    final updatedAddress = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            EditAddressPage(addressController: _addressController),
+      ),
+    );
+
+    if (updatedAddress != null && updatedAddress is String) {
+      setState(() {
+        _savedAddress = updatedAddress;
+      });
+    }
+  }
+
+  void _deleteAddress() {
+    setState(() {
+      _savedAddress = '';
+      _addressController.clear();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Address deleted successfully!")),
+    );
   }
 
   @override
@@ -53,6 +87,23 @@ class _DeliveryAddressPageState extends State<DeliveryAddressPage> {
             ),
             SizedBox(height: 20),
 
+            // Edit Button
+            if (_savedAddress.isNotEmpty)
+              ElevatedButton(
+                onPressed: _editAddress,
+                child: Text("Edit Address"),
+              ),
+            SizedBox(height: 20),
+
+            // Delete Button
+            if (_savedAddress.isNotEmpty)
+              ElevatedButton(
+                onPressed: _deleteAddress,
+                child: Text("Delete Address"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              ),
+            SizedBox(height: 20),
+
             // Display saved address
             if (_savedAddress.isNotEmpty)
               Text(
@@ -66,8 +117,39 @@ class _DeliveryAddressPageState extends State<DeliveryAddressPage> {
   }
 }
 
-void main() {
-  runApp(MaterialApp(
-    home: DeliveryAddressPage(),
-  ));
+class EditAddressPage extends StatelessWidget {
+  final TextEditingController addressController;
+
+  EditAddressPage({required this.addressController});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Edit Address"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: addressController,
+              decoration: InputDecoration(
+                labelText: "Enter Delivery Address",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, addressController.text);
+              },
+              child: Text("Save"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

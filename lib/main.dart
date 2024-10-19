@@ -1,20 +1,48 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/Admin/screens/Delivery_boy_details.dart';
 import 'package:grocery_vegitable_market/Admin/screens/dashboard.dart';
 import 'package:grocery_vegitable_market/screens/Account/account.dart';
+import 'package:grocery_vegitable_market/screens/Account/delivery_add.dart';
 import 'package:grocery_vegitable_market/screens/Explore/beverages%20.dart';
 import 'package:grocery_vegitable_market/screens/Explore/explore.dart';
 import 'package:grocery_vegitable_market/screens/Explore/fruit.dart';
 import 'package:grocery_vegitable_market/screens/Favorites/favoritepage.dart';
-
 import 'package:grocery_vegitable_market/screens/home/Home.dart';
-// import 'package:grocery_vegitable_market/screens/selectlocation';
-// import 'package:grocery_vegitable_market/screens/splashscreen.dart';
 import 'package:grocery_vegitable_market/screens/login.dart';
+import 'package:grocery_vegitable_market/screens/register.dart';
 import 'package:grocery_vegitable_market/screens/splashscreen.dart';
 import 'package:grocery_vegitable_market/screens/welcomescreen.dart';
 import 'package:grocery_vegitable_market/navigation/navigation_bar.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (kIsWeb) {
+    WidgetsFlutterBinding.ensureInitialized();
+    // Firebase initialization for web
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyAag9sX1VGnL013PEpLuLil403KbmkqejI",
+        authDomain:
+            "grocery-vegetable-market-215f9.firebaseapp.com", // Firebase Auth domain for web
+        projectId: "grocery-vegetable-market-215f9",
+        storageBucket:
+            "grocery-vegetable-market-215f9.appspot.com", // Firebase Storage
+        messagingSenderId: "243939484600",
+        appId: "1:243939484600:android:27da5344c5ba7a9593254d",
+        measurementId:
+            "G-XXXXXXXXXX", // Optional: Use your Firebase Analytics measurement ID
+        databaseURL:
+            "https://grocery-vegetable-market-215f9.firebaseio.com", // Realtime Database URL (if needed)
+      ),
+    );
+  } else {
+    // Firebase initialization for mobile (Android/iOS)
+    await Firebase.initializeApp();
+  }
+
   runApp(const MyApp());
 }
 
@@ -29,17 +57,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: const Splashscreen(),
-      //home: LoginPage(),
-      //home: SelectLocationPage(),
-      //home: Home(),
-      //home: Account(),
-      //home: ExplorePage(),
-      //home: BeverageScreen(),
-      //home: FruitPage(),
-      //home: FavoritePage(),
-      //home: DashboardApp(),
-
+      // Set initial route or page here
+      home: Register(),
       routes: {
         '/welcome': (context) => const Welcomescreen(),
         '/login': (context) => LoginPage(),

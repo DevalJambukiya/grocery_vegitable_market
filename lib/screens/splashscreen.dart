@@ -13,7 +13,7 @@ class _SplashscreenState extends State<Splashscreen> {
   void initState() {
     super.initState();
     // Delay for 3 seconds and then navigate to the WelcomeScreen
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const Welcomescreen()),
