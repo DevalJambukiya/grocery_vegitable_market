@@ -1,117 +1,134 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:grocery_vegitable_market/screens/home/Home.dart';
+import 'package:grocery_vegitable_market/screens/Home/home.dart';
 
 class EmailVerificationPage extends StatefulWidget {
   final String email;
 
-  const EmailVerificationPage({required this.email, Key? key})
-      : super(key: key);
+  EmailVerificationPage({required this.email});
 
   @override
   _EmailVerificationPageState createState() => _EmailVerificationPageState();
 }
 
 class _EmailVerificationPageState extends State<EmailVerificationPage> {
-  final _formKey = GlobalKey<FormState>(); // Form key for validation
-  final TextEditingController _verificationCodeController =
-      TextEditingController();
-  bool _isLoading = false; // Loading indicator flag
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool isEmailVerified = false;
+  bool isVerificationEmailSent = false;
+  late User user;
+  late Timer timer;
 
-  // Method to verify the code
-  Future<void> _verifyCode() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true; // Show loading indicator
-      });
+  @override
+  void initState() {
+    super.initState();
+    user = _auth.currentUser!;
 
-      await Future.delayed(
-          const Duration(seconds: 2)); // Simulate async verification delay
+    // Send verification email upon entering the page
+    _sendVerificationEmail();
 
-      if (_verificationCodeController.text == '123456') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Verification successful!')),
-        );
-
-        // Navigate to the Home page if successful
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => Home()),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid verification code')),
-        );
-      }
-
-      setState(() {
-        _isLoading = false; // Hide loading indicator
-      });
-    }
+    // Start checking for email verification status periodically
+    timer = Timer.periodic(Duration(seconds: 3), (_) => _checkEmailVerified());
   }
 
   @override
   void dispose() {
-    _verificationCodeController
-        .dispose(); // Dispose of controller when not needed
+    timer.cancel();
     super.dispose();
+  }
+
+  Future<void> _sendVerificationEmail() async {
+    try {
+      await user.sendEmailVerification();
+      setState(() {
+        isVerificationEmailSent = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Verification email sent to ${widget.email}')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending email: ${e.toString()}')),
+      );
+    }
+  }
+
+  Future<void> _checkEmailVerified() async {
+    // Refresh user to check if email has been verified
+    await user.reload();
+    user = _auth.currentUser!;
+
+    if (user.emailVerified) {
+      setState(() {
+        isEmailVerified = true;
+      });
+      timer.cancel();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Email verified!')),
+      );
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => Home(), // Redirect to home page or dashboard
+      ));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Email Verification')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey, // Assign form key to the Form widget
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'A verification code has been sent to ${widget.email}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _verificationCodeController,
-                decoration: const InputDecoration(
-                  labelText: 'Enter Verification Code',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the verification code'; // Error if empty
-                  }
-                  if (value.length != 6) {
-                    return 'Verification code must be 6 digits'; // Error if code length is not 6
-                  }
-                  return null;
-                },
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading
-                      ? null
-                      : _verifyCode, // Disable button when loading
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+      appBar: AppBar(
+        title: Text('Email Verification'),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: screenHeight,
+            ),
+            child: IntrinsicHeight(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Verify your email',
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.08,
+                      fontWeight: FontWeight.bold,
                     ),
-                    backgroundColor: Colors.green,
                   ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
-                        )
-                      : const Text('Verify', style: TextStyle(fontSize: 18)),
-                ),
+                  SizedBox(height: 20),
+                  Text(
+                    'A verification email has been sent to ${widget.email}. Please check your inbox and click on the verification link to verify your email address.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: screenWidth * 0.04),
+                  ),
+                  SizedBox(height: 20),
+                  if (isVerificationEmailSent)
+                    TextButton(
+                      onPressed: _sendVerificationEmail,
+                      child: Text('Resend Verification Email'),
+                    ),
+                  if (!isEmailVerified)
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  if (isEmailVerified)
+                    Text(
+                      'Email verified successfully!',
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.06,
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

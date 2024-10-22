@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:grocery_vegitable_market/screens/login.dart';
 import 'package:grocery_vegitable_market/screens/register.dart';
+import 'package:grocery_vegitable_market/screens/splashscreen.dart';
 import 'package:grocery_vegitable_market/screens/welcomescreen.dart';
 
 void main() async {

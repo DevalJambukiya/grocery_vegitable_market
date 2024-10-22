@@ -51,6 +51,20 @@ class _LoginPageState extends State<LoginPage> {
             SnackBar(content: Text("Welcome, $userName!")),
           );
 
+          // Fetch all user data from the 'register' collection
+          QuerySnapshot allUsersData =
+              await _firestore.collection('register').get();
+          List<Map<String, dynamic>> allUsersList =
+              allUsersData.docs.map((doc) {
+            return {
+              'id': doc.id,
+              ...doc.data() as Map<String, dynamic>,
+            };
+          }).toList();
+
+          // You can now use allUsersList to display or process the data
+          print("All users data: $allUsersList");
+
           // Navigate to the EmailVerificationPage (or another page)
           Navigator.push(
             context,
