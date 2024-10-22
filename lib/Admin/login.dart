@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore package
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:grocery_vegitable_market/Admin/screens/dashboard.dart';
 
 class AdminLogin extends StatefulWidget {
@@ -19,6 +21,46 @@ class _AdminLoginState extends State<AdminLogin> {
     });
   }
 
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        // Authenticate user with Firebase
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        // Fetch admin data from Firestore
+        DocumentSnapshot adminData = await FirebaseFirestore.instance
+            .collection(
+                'admins') // Change 'admins' to your Firestore collection name
+            .doc(userCredential.user!.uid) // Get the document by user ID
+            .get();
+
+        if (adminData.exists) {
+          // Navigate to DashboardPage if the admin exists
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DashboardPage(),
+            ),
+          );
+        } else {
+          // Handle case where admin does not exist
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Admin not found')),
+          );
+        }
+      } on FirebaseAuthException catch (e) {
+        // Handle authentication error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'Login failed')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -34,7 +76,7 @@ class _AdminLoginState extends State<AdminLogin> {
             ),
             child: IntrinsicHeight(
               child: Form(
-                key: _formKey, // Assign the form key
+                key: _formKey,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -111,18 +153,7 @@ class _AdminLoginState extends State<AdminLogin> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            // If the form is valid, navigate to DashboardPage
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    DashboardPage(), // Navigate to the dashboard
-                              ),
-                            );
-                          }
-                        },
+                        onPressed: _login, // Call the login function
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.all(16),
                           shape: RoundedRectangleBorder(

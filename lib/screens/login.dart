@@ -35,42 +35,34 @@ class _LoginPageState extends State<LoginPage> {
           password: _passwordController.text,
         );
 
-        // Fetch user data from Firestore 'register' collection
+        // Fetch user data from Firestore 'users' collection
         DocumentSnapshot userData = await _firestore
             .collection(
-                'register') // Ensure this matches your Firestore collection name
+                'users') // Ensure this matches your Firestore collection name
             .doc(userCredential.user!.uid) // Use UID to get user data
             .get();
 
-        if (userData.exists) {
-          // Retrieve the name from Firestore
-          String userName = userData['name'];
+        // Print the fetched user data for debugging
+        print("Fetched user data: ${userData.data()}");
 
-          // Show a message or perform another action
+        if (userData.exists) {
+          // Retrieve the fullName and email from Firestore
+          String userName =
+              userData['fullName'] ?? "User"; // Changed to fullName
+          String userEmail = userData['email'] ??
+              _emailController.text; // Fallback in case email is null
+
+          // Show a welcome message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Welcome, $userName!")),
           );
-
-          // Fetch all user data from the 'register' collection
-          QuerySnapshot allUsersData =
-              await _firestore.collection('register').get();
-          List<Map<String, dynamic>> allUsersList =
-              allUsersData.docs.map((doc) {
-            return {
-              'id': doc.id,
-              ...doc.data() as Map<String, dynamic>,
-            };
-          }).toList();
-
-          // You can now use allUsersList to display or process the data
-          print("All users data: $allUsersList");
 
           // Navigate to the EmailVerificationPage (or another page)
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => EmailVerificationPage(
-                email: _emailController.text,
+                email: userEmail, // Pass the email fetched from Firestore
               ),
             ),
           );
@@ -82,6 +74,8 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } catch (e) {
+        // Log the error for debugging
+        print("Error during login: ${e.toString()}");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Login failed: ${e.toString()}")),
         );
