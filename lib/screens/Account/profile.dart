@@ -1,4 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io'; // For handling file uploads
+import 'package:firebase_storage/firebase_storage.dart'; // For Firebase Storage
 
 class MyDetailsPage extends StatefulWidget {
   @override
@@ -10,28 +15,96 @@ class _MyDetailsPageState extends State<MyDetailsPage> {
   String _name = '';
   String _mobileNumber = '';
   String _email = '';
-  String _password = '';
   String _address = '';
-  String _profilePhoto = ''; // Placeholder for profile photo URL or path
+  String _profilePhoto = ''; // Profile photo URL
 
-  // Function to handle profile photo selection
-  void _pickProfilePhoto() async {
-    // Here you would use an image picker to let the user select a photo.
-    // For now, we just simulate a profile photo update.
-    setState(() {
-      _profilePhoto =
-          'path/to/profile/photo.jpg'; // Replace with actual file picker result
-    });
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseStorage _storage =
+      FirebaseStorage.instance; // Add Firebase Storage instance
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsersData(); // Fetch user data when the widget is initialized
   }
 
-  // Function to handle form submission
-  void _submitForm() {
+  Future<void> _fetchUsersData() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        // Fetching user document from Firestore
+        DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(user.uid).get();
+
+        if (userDoc.exists) {
+          setState(() {
+            _name = userDoc['fullName'] ?? ''; // Fetch name from Firestore
+            _mobileNumber = userDoc['mobileNumber'] ?? '';
+            _email = userDoc['email'] ?? '';
+            _address = userDoc['address'] ?? '';
+            _profilePhoto =
+                userDoc['profilePhoto'] ?? ''; // Fetch profile photo if exists
+          });
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching user data: ${e.toString()}')),
+      );
+    }
+  }
+
+  void _pickProfilePhoto() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      // Upload the image to Firebase Storage
+      String imagePath = 'profilePhotos/${_auth.currentUser!.uid}.jpg';
+      TaskSnapshot uploadTask =
+          await _storage.ref(imagePath).putFile(File(image.path));
+
+      // Get the download URL after upload
+      String downloadUrl = await uploadTask.ref.getDownloadURL();
+
+      // Save the download URL to Firestore
+      await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
+        'profilePhoto': downloadUrl,
+      });
+
+      // Update the state to show the new profile photo
+      setState(() {
+        _profilePhoto = downloadUrl;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Profile photo updated successfully!")),
+      );
+    }
+  }
+
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      // Handle form submission, e.g., send data to backend or save locally
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Profile updated successfully!")),
-      );
+      final user = _auth.currentUser;
+      if (user != null) {
+        try {
+          await _firestore.collection('users').doc(user.uid).update({
+            'fullName': _name,
+            'mobileNumber': _mobileNumber,
+            'email': _email,
+            'address': _address,
+            // Profile photo is already updated in _pickProfilePhoto
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Profile updated successfully!")),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error updating profile: ${e.toString()}')),
+          );
+        }
+      }
     }
   }
 
@@ -47,15 +120,16 @@ class _MyDetailsPageState extends State<MyDetailsPage> {
           key: _formKey,
           child: ListView(
             children: [
-              // Profile Photo Upload
               Center(
                 child: Column(
                   children: [
                     CircleAvatar(
                       radius: 50,
                       backgroundImage: _profilePhoto.isEmpty
-                          ? AssetImage('assets/Logo/welcome.jpg') // Placeholder
-                          : NetworkImage(_profilePhoto) as ImageProvider,
+                          ? AssetImage(
+                              'assets/Logo/welcome.jpg') // Placeholder if no profile photo
+                          : NetworkImage(_profilePhoto)
+                              as ImageProvider, // Load profile photo URL
                     ),
                     TextButton(
                       onPressed: _pickProfilePhoto,
@@ -65,9 +139,8 @@ class _MyDetailsPageState extends State<MyDetailsPage> {
                 ),
               ),
               SizedBox(height: 20),
-
-              // Name Input
               TextFormField(
+                initialValue: _name,
                 decoration: InputDecoration(labelText: "Name"),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -80,9 +153,8 @@ class _MyDetailsPageState extends State<MyDetailsPage> {
                 },
               ),
               SizedBox(height: 10),
-
-              // Mobile Number Input
               TextFormField(
+                initialValue: _mobileNumber,
                 decoration: InputDecoration(labelText: "Mobile Number"),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
@@ -99,9 +171,8 @@ class _MyDetailsPageState extends State<MyDetailsPage> {
                 },
               ),
               SizedBox(height: 10),
-
-              // Email Input
               TextFormField(
+                initialValue: _email,
                 decoration: InputDecoration(labelText: "Email"),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
@@ -118,28 +189,18 @@ class _MyDetailsPageState extends State<MyDetailsPage> {
                 },
               ),
               SizedBox(height: 10),
-
-              // Password Input
               TextFormField(
-                decoration: InputDecoration(labelText: "Password"),
+                decoration: InputDecoration(labelText: "New Password"),
                 obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter your password";
+                onSaved: (value) async {
+                  if (value != null && value.isNotEmpty) {
+                    await _auth.currentUser!.updatePassword(value);
                   }
-                  if (value.length < 6) {
-                    return "Password must be at least 6 characters long";
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _password = value!;
                 },
               ),
               SizedBox(height: 10),
-
-              // Address Input
               TextFormField(
+                initialValue: _address,
                 decoration: InputDecoration(labelText: "Address"),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -152,8 +213,6 @@ class _MyDetailsPageState extends State<MyDetailsPage> {
                 },
               ),
               SizedBox(height: 20),
-
-              // Submit Button
               ElevatedButton(
                 onPressed: _submitForm,
                 child: Text("Update Profile"),

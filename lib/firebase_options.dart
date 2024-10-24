@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAag9sX1VGnL013PEpLuLil403KbmkqejI',
-    appId: '1:243939484600:android:27da5344c5ba7a9593254d',
+    appId: '1:243939484600:android:eaf2123b83cece2093254d',
     messagingSenderId: '243939484600',
     projectId: 'grocery-vegetable-market-215f9',
     storageBucket: 'grocery-vegetable-market-215f9.appspot.com',
@@ -64,6 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '243939484600',
     projectId: 'grocery-vegetable-market-215f9',
     storageBucket: 'grocery-vegetable-market-215f9.appspot.com',
+    iosClientId: '243939484600-5n6960ja1a2ke5iplf4qfvelh03i9qep.apps.googleusercontent.com',
     iosBundleId: 'com.example.groceryVegitableMarket',
   );
 
@@ -73,6 +74,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '243939484600',
     projectId: 'grocery-vegetable-market-215f9',
     storageBucket: 'grocery-vegetable-market-215f9.appspot.com',
+    iosClientId: '243939484600-5n6960ja1a2ke5iplf4qfvelh03i9qep.apps.googleusercontent.com',
     iosBundleId: 'com.example.groceryVegitableMarket',
   );
 

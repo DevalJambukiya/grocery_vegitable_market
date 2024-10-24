@@ -4,16 +4,20 @@
     "project_id": "grocery-vegetable-market-215f9",
     "storage_bucket": "grocery-vegetable-market-215f9.appspot.com"
   },
-  
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:243939484600:android:27da5344c5ba7a9593254d",
+        "mobilesdk_app_id": "1:243939484600:android:c488838b100b464693254d",
         "android_client_info": {
-          "package_name": "com.example.grocery_vegitable_market"
+          "package_name": "com.example.groceri"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "243939484600-ad0b1u57vjlhf9chkh7o0ahdkhpvkfes.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAag9sX1VGnL013PEpLuLil403KbmkqejI"
@@ -21,7 +25,91 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "243939484600-ad0b1u57vjlhf9chkh7o0ahdkhpvkfes.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "243939484600-5n6960ja1a2ke5iplf4qfvelh03i9qep.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.groceryVegitableMarket"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:243939484600:android:eaf2123b83cece2093254d",
+        "android_client_info": {
+          "package_name": "com.example.grocery"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "243939484600-ad0b1u57vjlhf9chkh7o0ahdkhpvkfes.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAag9sX1VGnL013PEpLuLil403KbmkqejI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "243939484600-ad0b1u57vjlhf9chkh7o0ahdkhpvkfes.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "243939484600-5n6960ja1a2ke5iplf4qfvelh03i9qep.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.groceryVegitableMarket"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:243939484600:android:27da5344c5ba7a9593254d",
+        "android_client_info": {
+          "package_name": "com.example.grocery_vegitable_market"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "243939484600-ad0b1u57vjlhf9chkh7o0ahdkhpvkfes.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAag9sX1VGnL013PEpLuLil403KbmkqejI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "243939484600-ad0b1u57vjlhf9chkh7o0ahdkhpvkfes.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "243939484600-5n6960ja1a2ke5iplf4qfvelh03i9qep.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.groceryVegitableMarket"
+              }
+            }
+          ]
         }
       }
     }

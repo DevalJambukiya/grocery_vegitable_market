@@ -105,15 +105,18 @@ class _AccountPageState extends State<AccountPage> {
                         children: [
                           CircleAvatar(
                             radius: 35,
-                            backgroundImage:
-                                AssetImage('assets/Logo/welcome.jpg'),
+                            backgroundImage: userData['profileImage'] != null &&
+                                    userData['profileImage'] != ''
+                                ? NetworkImage(userData['profileImage'])
+                                : AssetImage('assets/Logo/welcome.jpg')
+                                    as ImageProvider,
                           ),
                           SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                userData['name'] ??
+                                userData['fullName'] ??
                                     'No Name', // User's name from Firestore
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,

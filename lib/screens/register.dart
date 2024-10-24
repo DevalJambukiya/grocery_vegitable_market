@@ -1,10 +1,15 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:grocery_vegitable_market/screens/login.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:grocery_vegitable_market/screens/Home/home.dart';
 
 class Register extends StatefulWidget {
-  const Register({super.key});
+  const Register({Key? key}) : super(key: key);
 
   @override
   State<Register> createState() => _RegisterState();
@@ -18,9 +23,13 @@ class _RegisterState extends State<Register> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _mobileNumberController = TextEditingController();
 
   bool _obscureText = true;
   bool _isLoading = false;
+  File? _selectedImage;
+  String? _imageUrl;
+  XFile? _pickedFile; // Declare pickedFile as a class-level variable
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -31,6 +40,23 @@ class _RegisterState extends State<Register> {
     });
   }
 
+  Future<void> _pickImage() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _pickedFile = pickedFile;
+        if (kIsWeb) {
+          _imageUrl = pickedFile.path;
+        } else {
+          _selectedImage = File(pickedFile.path);
+        }
+      });
+    }
+  }
+
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -38,46 +64,50 @@ class _RegisterState extends State<Register> {
       });
 
       try {
-        // Check if email is already in use
-        List<String> signInMethods =
-            await _auth.fetchSignInMethodsForEmail(_emailController.text);
-        if (signInMethods.isNotEmpty) {
-          // Email is already in use, show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content:
-                    Text('This email is already registered. Please log in.')),
-          );
-          return;
-        }
-
-        // If email is not in use, proceed with registration
+        // Register user with Firebase Authentication
         UserCredential userCredential =
             await _auth.createUserWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
 
-        // Store user data in Firestore
+        String? imageUrl;
+        if (_selectedImage != null || _pickedFile != null) {
+          // Upload the selected image to Firebase Storage
+          FirebaseStorage storage = FirebaseStorage.instance;
+          Reference ref = storage
+              .ref()
+              .child('profile_images/${userCredential.user!.uid}.jpg');
+
+          if (kIsWeb && _pickedFile != null) {
+            UploadTask uploadTask =
+                ref.putData(await _pickedFile!.readAsBytes());
+            TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
+            imageUrl = await snapshot.ref.getDownloadURL();
+          } else if (_selectedImage != null) {
+            UploadTask uploadTask = ref.putFile(_selectedImage!);
+            TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
+            imageUrl = await snapshot.ref.getDownloadURL();
+          }
+        }
+
+        // Store user data in Firestore, including image URL
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'fullName': _fullNameController.text,
           'email': _emailController.text,
           'address': _addressController.text,
+          'mobileNumber': _mobileNumberController.text,
+          'profileImage':
+              imageUrl ?? '', // Save image URL or empty if not provided
         });
 
-        // Inform the user that registration was successful
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Registration successful! Welcome, ${_fullNameController.text}')),
+          SnackBar(content: Text('Registration successful!')),
         );
 
-        // Navigate to the Home page or another page
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => Home(), // Change to your home page widget
-          ),
+          MaterialPageRoute(builder: (context) => Home()),
         );
       } on FirebaseAuthException catch (e) {
         String errorMessage = 'An error occurred. Please try again.';
@@ -92,6 +122,10 @@ class _RegisterState extends State<Register> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
       } finally {
         setState(() {
@@ -118,15 +152,31 @@ class _RegisterState extends State<Register> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 40),
-                  child: Image.asset(
-                    'assets/Logo/carrot.png',
-                    height: screenHeight * 0.1,
-                    width: screenWidth * 0.2,
-                    fit: BoxFit.contain,
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.grey.shade300,
+                    child: _imageUrl != null || _selectedImage != null
+                        ? ClipOval(
+                            child: kIsWeb
+                                ? Image.network(
+                                    _imageUrl!,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.file(
+                                    _selectedImage!,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                          )
+                        : Icon(Icons.camera_alt, size: 50, color: Colors.grey),
                   ),
                 ),
+                SizedBox(height: 16),
                 Text(
                   'Create Account',
                   style: TextStyle(
@@ -197,6 +247,26 @@ class _RegisterState extends State<Register> {
                 ),
                 SizedBox(height: 16),
 
+                // Mobile Number TextField
+                TextFormField(
+                  controller: _mobileNumberController,
+                  decoration: InputDecoration(
+                    labelText: 'Mobile Number',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your mobile number';
+                    }
+                    if (value.length < 10) {
+                      return 'Please enter a valid mobile number';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 16),
+
                 // Password TextField
                 TextFormField(
                   controller: _passwordController,
@@ -213,7 +283,7 @@ class _RegisterState extends State<Register> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
+                      return 'Please enter a password';
                     }
                     if (value.length < 6) {
                       return 'Password must be at least 6 characters long';
@@ -247,37 +317,33 @@ class _RegisterState extends State<Register> {
                     return null;
                   },
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: 32),
 
-                // Register Button with Loading Spinner
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _register,
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.all(16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      backgroundColor: Colors.green,
-                    ),
-                    child: _isLoading
-                        ? CircularProgressIndicator(color: Colors.white)
-                        : Text('Register', style: TextStyle(fontSize: 18)),
-                  ),
+                // Register Button
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _register,
+                  child: _isLoading
+                      ? CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        )
+                      : Text('Register'),
                 ),
                 SizedBox(height: 16),
 
-                // Already have an account? Login
+                // Already have an account? Login button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Already have an account?"),
+                    Text('Already have an account?'),
                     TextButton(
                       onPressed: () {
-                        Navigator.pop(context); // Go back to Login Page
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                        );
                       },
-                      child: Text('Log In'),
+                      child: Text('Login'),
                     ),
                   ],
                 ),
@@ -563,3 +629,4 @@ class _RegisterState extends State<Register> {
 //     );
 //   }
 // }
+
