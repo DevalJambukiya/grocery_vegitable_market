@@ -138,7 +138,7 @@ class _HomeState extends State<Home> {
         NavigationElement(
           icon: const Icon(Icons.person),
           label: 'Account',
-          builder: () => Account(), // Updated with alias
+          builder: () => AccountPage(), // Updated with alias
         ),
       ],
       backgroundColor: Colors.white,

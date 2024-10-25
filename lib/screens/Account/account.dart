@@ -8,23 +8,46 @@ import 'package:grocery_vegitable_market/screens/Account/delivery_add.dart';
 import 'package:grocery_vegitable_market/screens/Account/order.dart';
 import 'package:grocery_vegitable_market/screens/Account/payment.dart';
 import 'package:grocery_vegitable_market/screens/Account/profile.dart';
+import 'package:grocery_vegitable_market/screens/login.dart'; // Assuming you have a login page
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(); // Initialize Firebase
-  runApp(Account());
+  runApp(MyApp());
 }
 
-class Account extends StatelessWidget {
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: AccountPage(), // Directly navigate to the Account Page
+      home: AuthWrapper(), // Use AuthWrapper for authentication handling
       theme: ThemeData(
         primarySwatch: Colors.green,
         fontFamily: 'Roboto',
       ),
-      debugShowCheckedModeBanner: false, // Remove the debug banner
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    return StreamBuilder<User?>(
+      stream: _auth.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.active) {
+          User? user = snapshot.data;
+          if (user == null) {
+            return LoginPage(); // Redirect to Login Page if not logged in
+          } else {
+            return AccountPage(); // Redirect to Account Page if logged in
+          }
+        }
+        return Center(child: CircularProgressIndicator()); // Loading state
+      },
     );
   }
 }
@@ -116,8 +139,7 @@ class _AccountPageState extends State<AccountPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                userData['fullName'] ??
-                                    'No Name', // User's name from Firestore
+                                userData['fullName'] ?? 'No Name',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 20,
@@ -125,8 +147,7 @@ class _AccountPageState extends State<AccountPage> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                user!.email ??
-                                    'No Email', // User's email from Firebase Auth
+                                user!.email ?? 'No Email',
                                 style: TextStyle(
                                   color: Colors.grey[700],
                                 ),
@@ -164,10 +185,11 @@ class _AccountPageState extends State<AccountPage> {
                   child: OutlinedButton.icon(
                     onPressed: () async {
                       await _auth.signOut(); // Log out action
-                      // Prevent automatic refresh by popping to root or logging out properly
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) => Account()),
-                        (Route<dynamic> route) => false,
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                LoginPage()), // Navigate to Login Page
                       );
                     },
                     icon: Icon(Icons.logout),

@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
       ),
       // Set initial route or page here
-      home: DashboardPage(),
+      home: Splashscreen(),
       routes: {
         '/welcome': (context) => const Welcomescreen(),
         '/login': (context) => LoginPage(),
