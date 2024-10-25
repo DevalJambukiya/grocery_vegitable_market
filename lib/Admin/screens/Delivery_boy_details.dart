@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(MaterialApp(
     home: DeliveryBoyDetailsPage(),
   ));
@@ -12,44 +18,51 @@ class DeliveryBoyDetailsPage extends StatefulWidget {
 }
 
 class _DeliveryBoyDetailsPageState extends State<DeliveryBoyDetailsPage> {
-  List<Map<String, dynamic>> deliveryBoys = [
-    {
-      'image': 'assets/Logo/carrot.png',
-      'name': 'ABC',
-      'phone': '1234567890',
-      'email': 'abc@gmail.com',
-      'address': '123 Main Street, City',
-      'vehicle': {
-        'type': 'Bike',
-        'model': 'Yamaha FZ',
-        'number': 'ABC-1234',
-      },
-    },
-    {
-      'image': 'assets/Logo/carrot.png',
-      'name': 'XYZ',
-      'phone': '1234567890',
-      'email': 'xyz@gmail.com',
-      'address': '456 Elm Street, Town',
-      'vehicle': {
-        'type': 'Scooter',
-        'model': 'Honda Activa',
-        'number': 'XYZ-5678',
-      },
-    },
-    {
-      'image': 'assets/Logo/carrot.png',
-      'name': 'LMN',
-      'phone': '1234567890',
-      'email': 'lmn@gmail.com',
-      'address': '789 Oak Avenue, Village',
-      'vehicle': {
-        'type': 'Car',
-        'model': 'Toyota Prius',
-        'number': 'LMN-3456',
-      },
-    },
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<Map<String, dynamic>> deliveryBoys = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDeliveryBoys();
+  }
+
+  Future<void> _loadDeliveryBoys() async {
+    final snapshot = await _firestore.collection('delivery_boydetails').get();
+    setState(() {
+      deliveryBoys = snapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
+          .toList();
+    });
+  }
+
+  Future<void> _addDeliveryBoy(Map<String, dynamic> newDeliveryBoy) async {
+    await _firestore.collection('delivery_boydetails').add(newDeliveryBoy);
+    _showSnackBar('Delivery boy added successfully!');
+    _loadDeliveryBoys(); // Refresh the list
+  }
+
+  Future<void> _updateDeliveryBoy(
+      String id, Map<String, dynamic> updatedDeliveryBoy) async {
+    await _firestore
+        .collection('delivery_boydetails')
+        .doc(id)
+        .update(updatedDeliveryBoy);
+    _showSnackBar('Delivery boy updated successfully!');
+    _loadDeliveryBoys(); // Refresh the list
+  }
+
+  Future<void> _deleteDeliveryBoy(String id) async {
+    await _firestore.collection('delivery_boydetails').doc(id).delete();
+    _showSnackBar('Delivery boy deleted successfully!');
+    _loadDeliveryBoys(); // Refresh the list
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +79,7 @@ class _DeliveryBoyDetailsPageState extends State<DeliveryBoyDetailsPage> {
                   MaterialPageRoute(
                     builder: (context) => AddDeliveryBoyPage(
                       onAdd: (newDeliveryBoy) {
-                        setState(() {
-                          deliveryBoys.add(newDeliveryBoy);
-                        });
+                        _addDeliveryBoy(newDeliveryBoy);
                       },
                     ),
                   ),
@@ -87,13 +98,22 @@ class _DeliveryBoyDetailsPageState extends State<DeliveryBoyDetailsPage> {
           itemBuilder: (context, index) {
             return DeliveryBoyCard(
               deliveryBoy: deliveryBoys[index],
-              onEdit: (updatedDeliveryBoy) {
-                setState(() {
-                  deliveryBoys[index] = updatedDeliveryBoy;
-                });
-              },
               onDelete: () {
-                _showDeleteConfirmationDialog(index);
+                _showDeleteConfirmationDialog(deliveryBoys[index]['id']);
+              },
+              onEdit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditDeliveryBoyPage(
+                      deliveryBoy: deliveryBoys[index],
+                      onUpdate: (updatedDeliveryBoy) {
+                        _updateDeliveryBoy(
+                            deliveryBoys[index]['id'], updatedDeliveryBoy);
+                      },
+                    ),
+                  ),
+                );
               },
             );
           },
@@ -102,7 +122,7 @@ class _DeliveryBoyDetailsPageState extends State<DeliveryBoyDetailsPage> {
     );
   }
 
-  void _showDeleteConfirmationDialog(int index) {
+  void _showDeleteConfirmationDialog(String id) {
     showDialog(
       context: context,
       builder: (context) {
@@ -119,9 +139,7 @@ class _DeliveryBoyDetailsPageState extends State<DeliveryBoyDetailsPage> {
             TextButton(
               child: Text('Delete'),
               onPressed: () {
-                setState(() {
-                  deliveryBoys.removeAt(index); // Delete the delivery boy
-                });
+                _deleteDeliveryBoy(id); // Delete the delivery boy
                 Navigator.of(context).pop(); // Dismiss the dialog
               },
             ),
@@ -134,14 +152,14 @@ class _DeliveryBoyDetailsPageState extends State<DeliveryBoyDetailsPage> {
 
 class DeliveryBoyCard extends StatelessWidget {
   final Map<String, dynamic> deliveryBoy;
-  final Function(Map<String, dynamic>) onEdit;
   final Function() onDelete;
+  final Function() onEdit;
 
   const DeliveryBoyCard({
     Key? key,
     required this.deliveryBoy,
-    required this.onEdit,
     required this.onDelete,
+    required this.onEdit,
   }) : super(key: key);
 
   @override
@@ -154,17 +172,20 @@ class DeliveryBoyCard extends StatelessWidget {
           leading: SizedBox(
             width: 50,
             height: 50,
-            // Uncomment to show the delivery boy's image
-            // child: Image.asset(
-            //   deliveryBoy['image'],
-            //   fit: BoxFit.cover,
-            // ),
+            child: CircleAvatar(
+              backgroundImage: NetworkImage(
+                deliveryBoy['image'] ?? 'https://via.placeholder.com/150',
+              ),
+              child: deliveryBoy['image'] == null
+                  ? Icon(Icons.camera_alt, size: 30, color: Colors.grey)
+                  : null,
+            ),
           ),
           title: Text(
-            deliveryBoy['name'],
+            deliveryBoy['name'] ?? 'Unknown',
             overflow: TextOverflow.ellipsis,
           ),
-          subtitle: Text(deliveryBoy['phone']),
+          subtitle: Text(deliveryBoy['phone'] ?? ''),
           children: [
             Padding(
               padding:
@@ -172,15 +193,17 @@ class DeliveryBoyCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Email: ${deliveryBoy['email']}'),
+                  Text('Email: ${deliveryBoy['email'] ?? 'N/A'}'),
                   SizedBox(height: 8),
-                  Text('Address: ${deliveryBoy['address']}'),
+                  Text('Address: ${deliveryBoy['address'] ?? 'N/A'}'),
                   SizedBox(height: 8),
-                  Text('Phone: ${deliveryBoy['phone']}'),
+                  Text('Phone: ${deliveryBoy['phone'] ?? 'N/A'}'),
                   SizedBox(height: 8),
-                  Text('Vehicle Type: ${deliveryBoy['vehicle']['type']}'),
-                  Text('Model: ${deliveryBoy['vehicle']['model']}'),
-                  Text('Vehicle Number: ${deliveryBoy['vehicle']['number']}'),
+                  Text(
+                      'Vehicle Type: ${deliveryBoy['vehicle']['type'] ?? 'N/A'}'),
+                  Text('Model: ${deliveryBoy['vehicle']['model'] ?? 'N/A'}'),
+                  Text(
+                      'Vehicle Number: ${deliveryBoy['vehicle']['number'] ?? 'N/A'}'),
                 ],
               ),
             ),
@@ -189,26 +212,11 @@ class DeliveryBoyCard extends StatelessWidget {
               children: [
                 IconButton(
                   icon: Icon(Icons.edit),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditDeliveryBoyPage(
-                          deliveryBoy: deliveryBoy,
-                        ),
-                      ),
-                    ).then((updatedDeliveryBoy) {
-                      if (updatedDeliveryBoy != null) {
-                        onEdit(updatedDeliveryBoy);
-                      }
-                    });
-                  },
+                  onPressed: onEdit,
                 ),
                 IconButton(
                   icon: Icon(Icons.delete),
-                  onPressed: () {
-                    onDelete();
-                  },
+                  onPressed: onDelete,
                 ),
               ],
             ),
@@ -219,7 +227,16 @@ class DeliveryBoyCard extends StatelessWidget {
   }
 }
 
-class AddDeliveryBoyPage extends StatelessWidget {
+class AddDeliveryBoyPage extends StatefulWidget {
+  final Function(Map<String, dynamic>) onAdd;
+
+  AddDeliveryBoyPage({required this.onAdd});
+
+  @override
+  _AddDeliveryBoyPageState createState() => _AddDeliveryBoyPageState();
+}
+
+class _AddDeliveryBoyPageState extends State<AddDeliveryBoyPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -228,9 +245,18 @@ class AddDeliveryBoyPage extends StatelessWidget {
   final TextEditingController _vehicleModelController = TextEditingController();
   final TextEditingController _vehicleNumberController =
       TextEditingController();
-  final Function(Map<String, dynamic>) onAdd;
+  File? _imageFile;
 
-  AddDeliveryBoyPage({required this.onAdd});
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -244,6 +270,20 @@ class AddDeliveryBoyPage extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: _imageFile != null
+                      ? FileImage(_imageFile!)
+                      : NetworkImage('https://via.placeholder.com/150')
+                          as ImageProvider,
+                  child: _imageFile == null
+                      ? Icon(Icons.camera_alt, size: 50, color: Colors.grey)
+                      : null,
+                ),
+              ),
+              SizedBox(height: 20),
               _buildTextField(_nameController, 'Name'),
               _buildTextField(_phoneController, 'Phone'),
               _buildTextField(_emailController, 'Email'),
@@ -264,8 +304,11 @@ class AddDeliveryBoyPage extends StatelessWidget {
                       'model': _vehicleModelController.text,
                       'number': _vehicleNumberController.text,
                     },
+                    'image': _imageFile != null
+                        ? _imageFile!.path // Use the path for now
+                        : 'https://via.placeholder.com/150',
                   };
-                  onAdd(newDeliveryBoy); // Pass new delivery boy back
+                  widget.onAdd(newDeliveryBoy);
                   Navigator.pop(context);
                 },
                 child: Text('Add Delivery Boy'),
@@ -295,28 +338,52 @@ class AddDeliveryBoyPage extends StatelessWidget {
   }
 }
 
-class EditDeliveryBoyPage extends StatelessWidget {
+class EditDeliveryBoyPage extends StatefulWidget {
   final Map<String, dynamic> deliveryBoy;
-  final TextEditingController _nameController;
-  final TextEditingController _phoneController;
-  final TextEditingController _emailController;
-  final TextEditingController _addressController;
-  final TextEditingController _vehicleTypeController;
-  final TextEditingController _vehicleModelController;
-  final TextEditingController _vehicleNumberController;
+  final Function(Map<String, dynamic>) onUpdate;
 
-  EditDeliveryBoyPage({required this.deliveryBoy})
-      : _nameController = TextEditingController(text: deliveryBoy['name']),
-        _phoneController = TextEditingController(text: deliveryBoy['phone']),
-        _emailController = TextEditingController(text: deliveryBoy['email']),
-        _addressController =
-            TextEditingController(text: deliveryBoy['address']),
-        _vehicleTypeController =
-            TextEditingController(text: deliveryBoy['vehicle']['type']),
-        _vehicleModelController =
-            TextEditingController(text: deliveryBoy['vehicle']['model']),
-        _vehicleNumberController =
-            TextEditingController(text: deliveryBoy['vehicle']['number']);
+  EditDeliveryBoyPage({required this.deliveryBoy, required this.onUpdate});
+
+  @override
+  _EditDeliveryBoyPageState createState() => _EditDeliveryBoyPageState();
+}
+
+class _EditDeliveryBoyPageState extends State<EditDeliveryBoyPage> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _vehicleTypeController = TextEditingController();
+  final TextEditingController _vehicleModelController = TextEditingController();
+  final TextEditingController _vehicleNumberController =
+      TextEditingController();
+  File? _imageFile;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill the text fields with existing data
+    _nameController.text = widget.deliveryBoy['name'] ?? '';
+    _phoneController.text = widget.deliveryBoy['phone'] ?? '';
+    _emailController.text = widget.deliveryBoy['email'] ?? '';
+    _addressController.text = widget.deliveryBoy['address'] ?? '';
+    _vehicleTypeController.text = widget.deliveryBoy['vehicle']['type'] ?? '';
+    _vehicleModelController.text = widget.deliveryBoy['vehicle']['model'] ?? '';
+    _vehicleNumberController.text =
+        widget.deliveryBoy['vehicle']['number'] ?? '';
+    _imageFile = null; // Initialize as null for the editing context
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -330,6 +397,20 @@ class EditDeliveryBoyPage extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: _imageFile != null
+                      ? FileImage(_imageFile!)
+                      : NetworkImage(widget.deliveryBoy['image'] ??
+                          'https://via.placeholder.com/150') as ImageProvider,
+                  child: _imageFile == null
+                      ? Icon(Icons.camera_alt, size: 50, color: Colors.grey)
+                      : null,
+                ),
+              ),
+              SizedBox(height: 20),
               _buildTextField(_nameController, 'Name'),
               _buildTextField(_phoneController, 'Phone'),
               _buildTextField(_emailController, 'Email'),
@@ -350,8 +431,13 @@ class EditDeliveryBoyPage extends StatelessWidget {
                       'model': _vehicleModelController.text,
                       'number': _vehicleNumberController.text,
                     },
+                    'image': _imageFile != null
+                        ? _imageFile!.path // Use the path for now
+                        : widget.deliveryBoy['image'] ??
+                            'https://via.placeholder.com/150', // Keep original if no new image
                   };
-                  Navigator.pop(context, updatedDeliveryBoy);
+                  widget.onUpdate(updatedDeliveryBoy);
+                  Navigator.pop(context);
                 },
                 child: Text('Update Delivery Boy'),
                 style: ElevatedButton.styleFrom(

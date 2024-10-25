@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:grocery_vegitable_market/Admin/screens/dashboard.dart';
 import 'package:grocery_vegitable_market/screens/Account/account.dart';
 import 'package:grocery_vegitable_market/screens/Home/home.dart';
 import 'package:grocery_vegitable_market/screens/login.dart';
@@ -49,7 +50,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
       ),
       // Set initial route or page here
-      home: LoginPage(),
+      home: DashboardPage(),
       routes: {
         '/welcome': (context) => const Welcomescreen(),
         '/login': (context) => LoginPage(),

@@ -4,7 +4,7 @@ import 'package:grocery_vegitable_market/Admin/screens/Add_category.dart';
 import 'package:grocery_vegitable_market/Admin/screens/Add_item.dart';
 import 'package:grocery_vegitable_market/Admin/screens/All_Product.dart';
 import 'package:grocery_vegitable_market/Admin/screens/Delivery_boy_details.dart';
-import 'package:grocery_vegitable_market/Admin/screens/Service_Page.dart';
+
 import 'package:grocery_vegitable_market/Admin/screens/Setting.dart';
 import 'package:grocery_vegitable_market/Admin/screens/User_details.dart';
 import 'package:grocery_vegitable_market/Admin/screens/manage_order.dart';
@@ -121,7 +121,6 @@ class _DashboardPageState extends State<DashboardPage> {
               Icons.inventory, 'Manage Order', context, 4, ManageOrderPage()),
           _buildDrawerItem(
               Icons.grid_on, 'All Product', context, 5, AllProductPage()),
-          _buildDrawerItem(Icons.build, 'Services', context, 6, ServicesPage()),
           _buildDrawerItem(Icons.delivery_dining, 'Delivery Boy Details',
               context, 7, DeliveryBoyDetailsPage()),
           _buildDrawerItem(

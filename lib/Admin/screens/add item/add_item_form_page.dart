@@ -1,6 +1,9 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart'; // Required for kIsWeb
 
 class AddItemFormPage extends StatefulWidget {
   final Function(Map<String, dynamic>) onAddItem;
@@ -17,22 +20,68 @@ class _AddItemFormPageState extends State<AddItemFormPage> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _detailsController = TextEditingController();
   String? _selectedCategory;
-  String? _imagePath; // Variable to hold the image path
-
+  Uint8List? _imageData; // Use Uint8List for image data
   final ImagePicker _picker = ImagePicker();
+  List<String> _categories = []; // List to hold categories
 
-  void _submitForm() {
+  @override
+  void initState() {
+    super.initState();
+    _fetchCategories(); // Fetch categories on init
+  }
+
+  Future<void> _fetchCategories() async {
+    final snapshot =
+        await FirebaseFirestore.instance.collection('categories').get();
+    setState(() {
+      _categories = snapshot.docs.map((doc) => doc['name'] as String).toList();
+    });
+  }
+
+  Future<String?> _uploadImage() async {
+    if (_imageData == null) return null; // Return null if no image is selected
+
+    // Create a unique file name
+    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    Reference ref =
+        FirebaseStorage.instance.ref().child('item_images/$fileName');
+
+    try {
+      // Upload image as bytes (works for Web and Mobile)
+      UploadTask uploadTask = ref.putData(_imageData!);
+      await uploadTask;
+
+      // Get the download URL
+      String downloadUrl = await ref.getDownloadURL();
+      return downloadUrl; // Return the download URL
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null; // Return null on error
+    }
+  }
+
+  Future<void> _submitForm() async {
     if (_nameController.text.isEmpty ||
         _stockController.text.isEmpty ||
         _priceController.text.isEmpty ||
         _detailsController.text.isEmpty ||
         _selectedCategory == null ||
-        _imagePath == null) {
+        _imageData == null) {
       return; // Add validation if necessary
     }
 
+    // Upload the image and get the URL
+    String? imageUrl = await _uploadImage();
+
+    if (imageUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Image upload failed. Please try again.')),
+      );
+      return;
+    }
+
     final newItem = {
-      'image': _imagePath!,
+      'image': imageUrl,
       'name': _nameController.text,
       'stock': int.parse(_stockController.text),
       'price': double.parse(_priceController.text),
@@ -45,12 +94,22 @@ class _AddItemFormPageState extends State<AddItemFormPage> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery); // Updated method
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
     if (pickedFile != null) {
-      setState(() {
-        _imagePath = pickedFile.path; // Store the image path
-      });
+      if (kIsWeb) {
+        // For Web, load the image as bytes
+        final bytes = await pickedFile.readAsBytes();
+        setState(() {
+          _imageData = bytes;
+        });
+      } else {
+        // For mobile, use the local file path
+        final bytes = await pickedFile.readAsBytes();
+        setState(() {
+          _imageData = bytes;
+        });
+      }
     }
   }
 
@@ -66,7 +125,7 @@ class _AddItemFormPageState extends State<AddItemFormPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildImagePicker(), // Move the image picker to the top
+              _buildImagePicker(),
               SizedBox(height: 16.0),
               _buildTextField(_nameController, 'Item Name', Icons.label),
               SizedBox(height: 16.0),
@@ -108,7 +167,6 @@ class _AddItemFormPageState extends State<AddItemFormPage> {
         prefixIcon: Icon(icon),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),
-          borderSide: BorderSide(color: Colors.green),
         ),
       ),
       keyboardType: keyboardType,
@@ -123,8 +181,7 @@ class _AddItemFormPageState extends State<AddItemFormPage> {
           _selectedCategory = newValue;
         });
       },
-      items: <String>['Vegetables', 'Fruits', 'Beverages']
-          .map<DropdownMenuItem<String>>((String value) {
+      items: _categories.map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
           value: value,
           child: Text(value),
@@ -134,7 +191,6 @@ class _AddItemFormPageState extends State<AddItemFormPage> {
         labelText: 'Select Category',
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),
-          borderSide: BorderSide(color: Colors.green),
         ),
       ),
       hint: Text('Select Category'),
@@ -142,25 +198,32 @@ class _AddItemFormPageState extends State<AddItemFormPage> {
   }
 
   Widget _buildImagePicker() {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: _pickImage,
-          child: Container(
-            width: double.infinity,
-            height: 200,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8.0),
-              border: Border.all(color: Colors.green),
-            ),
-            child: _imagePath == null
-                ? Center(child: Text('Tap to select an image'))
-                : Image.file(File(_imagePath!), fit: BoxFit.cover),
-          ),
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Container(
+        width: double.infinity,
+        height: 200,
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(8.0), // Rectangular shape
+          border: Border.all(color: Colors.green),
         ),
-        SizedBox(height: 8.0),
-      ],
+        child: _imageData == null
+            ? Center(child: Text('Tap to select an image'))
+            : kIsWeb
+                ? Image.memory(
+                    _imageData!,
+                    fit: BoxFit.cover,
+                    width: 200,
+                    height: 200,
+                  )
+                : Image.memory(
+                    _imageData!,
+                    fit: BoxFit.cover,
+                    width: 200,
+                    height: 200,
+                  ),
+      ),
     );
   }
 }

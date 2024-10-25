@@ -14,74 +14,37 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Card(
-        elevation: 2,
-        child: ListTile(
-          leading: SizedBox(
-            width: 50,
-            height: 50,
-            child: Image.asset(
-              item['image'],
-              fit: BoxFit.cover,
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.symmetric(vertical: 8.0),
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(item['name'], style: TextStyle(fontSize: 18)),
+            SizedBox(height: 8.0),
+            Text('Stock: ${item['stock']}'),
+            SizedBox(height: 4.0),
+            Text('Price: \$${item['price']}'),
+            SizedBox(height: 4.0),
+            Text('Details: ${item['details']}'),
+            SizedBox(height: 8.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: onEdit,
+                  child: Text('Edit'),
+                ),
+                ElevatedButton(
+                  onPressed: onDelete,
+                  child: Text('Delete'),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                ),
+              ],
             ),
-          ),
-          title: Flexible(
-            child: Text(
-              item['name'],
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          subtitle: Text('WW-DR-GR-XS001'),
-          trailing: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('\$${item['price'].toStringAsFixed(2)}'),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.edit),
-                    onPressed: onEdit,
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      // Confirm deletion before removing
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text('Delete Item'),
-                            content: Text(
-                                'Are you sure you want to delete this item?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context)
-                                      .pop(); // Close the dialog
-                                },
-                                child: Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  onDelete(); // Call delete function
-                                  Navigator.of(context)
-                                      .pop(); // Close the dialog
-                                },
-                                child: Text('Delete'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
