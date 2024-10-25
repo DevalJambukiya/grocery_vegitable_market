@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore package
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore
 import 'package:grocery_vegitable_market/Admin/screens/dashboard.dart';
 
 class AdminLogin extends StatefulWidget {
@@ -9,7 +8,7 @@ class AdminLogin extends StatefulWidget {
 }
 
 class _AdminLoginState extends State<AdminLogin> {
-  final _formKey = GlobalKey<FormState>(); // Form key for validation
+  final _formKey = GlobalKey<FormState>();
   bool _obscureText = true;
 
   final TextEditingController _emailController = TextEditingController();
@@ -21,42 +20,61 @@ class _AdminLoginState extends State<AdminLogin> {
     });
   }
 
+  Future<void> _showErrorDialog(String message) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[Text(message)],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Authenticate user with Firebase
-        UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
-
-        // Fetch admin data from Firestore
-        DocumentSnapshot adminData = await FirebaseFirestore.instance
-            .collection(
-                'admins') // Change 'admins' to your Firestore collection name
-            .doc(userCredential.user!.uid) // Get the document by user ID
+        // Fetch admin document by email
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('admins')
+            .where('email', isEqualTo: _emailController.text.trim())
             .get();
 
-        if (adminData.exists) {
-          // Navigate to DashboardPage if the admin exists
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DashboardPage(),
-            ),
-          );
+        if (querySnapshot.docs.isNotEmpty) {
+          final adminData = querySnapshot.docs.first.data();
+          final storedPassword = adminData['password'] as String;
+
+          // Verify password
+          if (storedPassword == _passwordController.text.trim()) {
+            // Navigate to Dashboard if credentials match
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DashboardPage(),
+              ),
+            );
+          } else {
+            _showErrorDialog('Incorrect password. Please try again.');
+          }
         } else {
-          // Handle case where admin does not exist
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Admin not found')),
-          );
+          _showErrorDialog('Admin not found with this email.');
         }
-      } on FirebaseAuthException catch (e) {
-        // Handle authentication error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Login failed')),
-        );
+      } catch (e) {
+        _showErrorDialog('Login failed. Please try again later.');
       }
     }
   }
@@ -71,9 +89,7 @@ class _AdminLoginState extends State<AdminLogin> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: screenHeight,
-            ),
+            constraints: BoxConstraints(minHeight: screenHeight),
             child: IntrinsicHeight(
               child: Form(
                 key: _formKey,
@@ -113,12 +129,12 @@ class _AdminLoginState extends State<AdminLogin> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please fill in your email'; // Error if email is empty
+                          return 'Please fill in your email';
                         }
                         String pattern =
-                            r'\w+@\w+\.\w+'; // Regex for basic email validation
+                            r'\w+@\w+\.\w+'; // Simple email validation regex
                         if (!RegExp(pattern).hasMatch(value)) {
-                          return 'Please enter a valid email address'; // Error if invalid email
+                          return 'Please enter a valid email address';
                         }
                         return null;
                       },
@@ -141,10 +157,10 @@ class _AdminLoginState extends State<AdminLogin> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please fill in your password'; // Error if password is empty
+                          return 'Please fill in your password';
                         }
                         if (value.length < 6) {
-                          return 'Password must be at least 6 characters long'; // Error for short password
+                          return 'Password must be at least 6 characters long';
                         }
                         return null;
                       },
@@ -153,7 +169,7 @@ class _AdminLoginState extends State<AdminLogin> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _login, // Call the login function
+                        onPressed: _login,
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.all(16),
                           shape: RoundedRectangleBorder(
@@ -165,11 +181,9 @@ class _AdminLoginState extends State<AdminLogin> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    // You can add a back button to return to the main login screen
                     TextButton(
                       onPressed: () {
-                        Navigator.pop(
-                            context); // Go back to the previous screen
+                        Navigator.pop(context); // Navigate back
                       },
                       child: Text("Back to User Login"),
                     ),

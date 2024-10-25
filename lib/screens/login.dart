@@ -26,6 +26,34 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
+  Future<void> _showErrorDialog(String message) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible:
+          false, // Prevent closing the dialog by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(message), // Display the error message
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _loginUser() async {
     if (_formKey.currentState!.validate()) {
       try {
@@ -49,15 +77,14 @@ class _LoginPageState extends State<LoginPage> {
           // Retrieve the fullName and email from Firestore
           String userName =
               userData['fullName'] ?? "User"; // Changed to fullName
-          String userEmail = userData['email'] ??
-              _emailController.text; // Fallback in case email is null
+          String userEmail = userData['email'] ?? _emailController.text;
 
           // Show a welcome message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Welcome, $userName!")),
           );
 
-          // Navigate to the EmailVerificationPage (or another page)
+          // Navigate to the EmailVerificationPage
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -69,16 +96,12 @@ class _LoginPageState extends State<LoginPage> {
         } else {
           // If user data is not found, sign the user out and show an error message
           _auth.signOut();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("User data not found in the database")),
-          );
+          _showErrorDialog("User data not found in the database.");
         }
       } catch (e) {
         // Log the error for debugging
         print("Error during login: ${e.toString()}");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Login failed: ${e.toString()}")),
-        );
+        _showErrorDialog("Login failed: ${e.toString()}");
       }
     }
   }

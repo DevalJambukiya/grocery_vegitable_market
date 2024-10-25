@@ -57,6 +57,34 @@ class _RegisterState extends State<Register> {
     }
   }
 
+  // Function to show the error dialog
+  Future<void> _showErrorDialog(String errorMessage) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap a button to close the dialog
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(errorMessage),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -120,13 +148,11 @@ class _RegisterState extends State<Register> {
               'The email is already in use. Please try another email.';
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        // Show the error dialog with the error message
+        _showErrorDialog(errorMessage);
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        // Show the error dialog for any other errors
+        _showErrorDialog('Error: ${e.toString()}');
       } finally {
         setState(() {
           _isLoading = false;
