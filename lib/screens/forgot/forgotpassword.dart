@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ForgotPassword extends StatefulWidget {
   @override
@@ -7,6 +9,53 @@ class ForgotPassword extends StatefulWidget {
 
 class _ForgotPasswordState extends State<ForgotPassword> {
   final TextEditingController _emailController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Function to check if email exists in Firestore and send reset link
+  Future<void> _checkEmailAndSendResetLink(String email) async {
+    try {
+      // Query Firestore to check if the email exists in the 'users' collection
+      final QuerySnapshot snapshot = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        // If email exists, send a password reset email
+        await _auth.sendPasswordResetEmail(email: email);
+        _showPopupMessage(
+            'Success', 'Password reset link has been sent to $email');
+      } else {
+        // Show error if email is not found in the Firestore database
+        _showPopupMessage('Error', 'Email not register');
+      }
+    } catch (e) {
+      // Show any other errors that might occur
+      _showPopupMessage('Error', 'Failed to send reset link: ${e.toString()}');
+    }
+  }
+
+  // Function to display success or error messages in a popup dialog
+  void _showPopupMessage(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,13 +89,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Handle email submission for password reset here
-                  String email = _emailController.text;
-                  // Add logic to send password reset email
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text('Password reset link sent to $email')),
-                  );
+                  // Get the entered email and initiate the reset process
+                  String email = _emailController.text.trim();
+                  _checkEmailAndSendResetLink(email);
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.all(16),
